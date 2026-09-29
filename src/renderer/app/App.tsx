@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Project, Task } from '../../domain/models';
+import type { Project, Task, TaskInput } from '../../domain/models';
+import type { MailMessage } from '../../domain/email';
 import { isOpen } from '../../domain/models';
 import { Icon, type IconName } from '../components/Icon';
 import { ErrorNotice, Empty, Modal, Panel } from '../components/ui';
 import { ProjectForm, TaskForm } from '../components/Forms';
 import { ProjectList, TaskList } from '../components/Lists';
-import { useWorkspace } from '../hooks/useWorkspace';
+import { unwrap, useWorkspace } from '../hooks/useWorkspace';
 import { Dashboard, type Actions } from '../pages/Dashboard';
 import { Settings } from '../pages/Settings';
 import { Emails } from '../pages/Emails';
+import { ProjectDetail } from '../pages/ProjectDetail';
 
 const navigation: { name: string; icon: IconName; future?: boolean }[] = [
   { name: 'Inicio', icon: 'home' },
@@ -22,7 +24,10 @@ const navigation: { name: string; icon: IconName; future?: boolean }[] = [
   { name: 'Reportes', icon: 'chart', future: true },
   { name: 'Configuración', icon: 'settings' },
 ];
-type Editor = { kind: 'project'; item?: Project } | { kind: 'task'; item?: Task };
+type Editor =
+  | { kind: 'project'; item?: Project }
+  | { kind: 'task'; item?: Task; initial?: TaskInput }
+  | { kind: 'emailTask'; mailId: string; initial: TaskInput };
 type Deletion = { kind: 'project'; item: Project } | { kind: 'task'; item: Task };
 export function App() {
   const { data, error, refresh, mutate } = useWorkspace();
@@ -34,6 +39,7 @@ export function App() {
   const [actionError, setActionError] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [projectId, setProjectId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -66,6 +72,19 @@ export function App() {
     }
   };
   const actions: Actions = {
+    openProject: (project) => {
+      setProjectId(project.id);
+      navigate('Detalle de proyecto');
+    },
+    taskFromEmail: (message: MailMessage) =>
+      void perform(async () => {
+        const draft = await unwrap(window.qa.mail.taskDraft(message.id));
+        if (draft.existing) {
+          setEditor({ kind: 'task', item: draft.existing });
+        } else {
+          setEditor({ kind: 'emailTask', mailId: message.id, initial: draft.input });
+        }
+      }, 'Revisa la tarea antes de guardar. Si ya existía, se abrió para editar.'),
     editProject: (item) => setEditor({ kind: 'project', item }),
     deleteProject: (item) => {
       setActionError('');
@@ -282,13 +301,14 @@ export function App() {
                     <span className="muted">
                       {page === 'Mi Día'
                         ? 'Las tareas completadas se conservan en Tareas.'
-                        : 'Haz clic en un nombre para editar.'}
+                        : 'Abre un proyecto para ver su ficha o una tarea para editarla.'}
                     </span>
                   </div>
                   {(query || page === 'Proyectos') && (
                     <Panel title={`Proyectos · ${projects.length}`} icon="folder">
                       <ProjectList
                         projects={projects}
+                        onOpen={actions.openProject}
                         onEdit={actions.editProject}
                         onDelete={actions.deleteProject}
                       />
@@ -312,7 +332,43 @@ export function App() {
                   )}
                 </>
               )}
-              {!query && page === 'Correos' && <Emails />}
+              {!query && page === 'Correos' && <Emails onCreateTask={actions.taskFromEmail} />}
+              {!query &&
+                page === 'Detalle de proyecto' &&
+                (() => {
+                  const project = data.projects.find((item) => item.id === projectId);
+                  return project ? (
+                    <ProjectDetail
+                      key={project.id}
+                      project={project}
+                      tasks={data.tasks}
+                      today={data.today}
+                      actions={actions}
+                      onBack={() => navigate('Proyectos')}
+                      onNewTask={() =>
+                        setEditor({
+                          kind: 'task',
+                          initial: {
+                            title: '',
+                            description: '',
+                            projectId: project.id,
+                            status: 'PENDING',
+                            priority: 'MEDIUM',
+                            dueDate: data.today,
+                            dueTime: null,
+                            waitingFor: 'USER',
+                          },
+                        })
+                      }
+                    />
+                  ) : (
+                    <Empty title="El proyecto ya no está disponible">
+                      <button className="text-button" onClick={() => navigate('Proyectos')}>
+                        Volver a proyectos
+                      </button>
+                    </Empty>
+                  );
+                })()}
               {!query && page === 'Configuración' && (
                 <Settings
                   settings={data.settings}
@@ -355,13 +411,29 @@ export function App() {
           }}
         />
       )}
-      {editor?.kind === 'task' && data && (
+      {(editor?.kind === 'task' || editor?.kind === 'emailTask') && data && (
         <TaskForm
-          task={editor.item}
+          task={editor.kind === 'task' ? editor.item : undefined}
+          initial={editor.initial}
+          context={
+            editor.kind === 'emailTask'
+              ? 'Revisa el título, el proyecto y la fecha. Al guardar, el texto aprobado se copia a tus tareas locales, que no están cifradas. El cuerpo del correo no se copia. No incluyas información sensible.'
+              : undefined
+          }
           projects={data.projects}
           today={data.today}
           onClose={() => setEditor(null)}
           onSave={async (input) => {
+            if (editor.kind === 'emailTask') {
+              const result = await mutate(window.qa.mail.createTask(editor.mailId, input));
+              setEditor(null);
+              setNotice(
+                result.created
+                  ? 'Tarea creada desde correo. Disponible en Tareas y en el proyecto elegido; aparecerá en Mi Día según su fecha y estado.'
+                  : 'Ese correo ya tiene una tarea. Se conservó la tarea existente sin duplicarla.',
+              );
+              return;
+            }
             await mutate(
               editor.item
                 ? window.qa.tasks.update(editor.item.id, input)

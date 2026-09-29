@@ -7,10 +7,12 @@ export function ProjectList({
   projects,
   onEdit,
   onDelete,
+  onOpen,
 }: {
   projects: Project[];
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
+  onOpen?: (project: Project) => void;
 }) {
   if (!projects.length)
     return (
@@ -38,7 +40,10 @@ export function ProjectList({
           {projects.map((project) => (
             <tr key={project.id}>
               <td>
-                <button className="text-button project-name" onClick={() => onEdit(project)}>
+                <button
+                  className="text-button project-name"
+                  onClick={() => (onOpen ?? onEdit)(project)}
+                >
                   {project.name}
                 </button>
                 <span className="subtext">{project.code || project.type}</span>
@@ -66,6 +71,15 @@ export function ProjectList({
               <td>{labels[project.waitingFor]}</td>
               <td className="muted nowrap">{relativeDate(project.lastActivityAt)}</td>
               <td>
+                {onOpen && (
+                  <button
+                    className="icon-button"
+                    aria-label={`Editar ${project.name}`}
+                    onClick={() => onEdit(project)}
+                  >
+                    <Icon name="edit" size={16} />
+                  </button>
+                )}
                 <button
                   className="icon-button"
                   title="Eliminar proyecto"
@@ -140,6 +154,11 @@ export function TaskList({
                 {projects.find((project) => project.id === task.projectId)?.name ?? 'Sin proyecto'}
               </span>
               {task.waitingFor !== 'USER' && <span>Esperando a {labels[task.waitingFor]}</span>}
+              {task.source === 'EMAIL' && (
+                <span>
+                  <Icon name="mail" size={12} /> Desde correo
+                </span>
+              )}
             </div>
           </div>
           <Badge value={task.priority} />

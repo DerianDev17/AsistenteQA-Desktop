@@ -1,9 +1,16 @@
 import { useState } from 'react';
+import type { MailMessage } from '../../domain/email';
 import { useMailSummary } from '../hooks/useMailSummary';
 import { Empty, ErrorNotice, Panel, relativeDate } from './ui';
 import { MailList, MailPreview } from './MailMessages';
 
-export function DashboardMail({ onOpenInbox }: { onOpenInbox: () => void }) {
+export function DashboardMail({
+  onOpenInbox,
+  onCreateTask,
+}: {
+  onOpenInbox: () => void;
+  onCreateTask?: (message: MailMessage) => void;
+}) {
   const { data, error, working, refresh, sync } = useMailSummary();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const status = data?.status;
@@ -99,7 +106,7 @@ export function DashboardMail({ onOpenInbox }: { onOpenInbox: () => void }) {
             </Empty>
           )}
           <div className="panel-footer">
-            <span>Los correos todavía no generan tareas automáticamente.</span>
+            <span>Abre un correo para revisarlo y crear una tarea.</span>
             {status.needsReconnect ? (
               <button className="secondary small" onClick={onOpenInbox}>
                 Renovar acceso
@@ -116,7 +123,19 @@ export function DashboardMail({ onOpenInbox }: { onOpenInbox: () => void }) {
           </div>
         </>
       )}
-      {selected && <MailPreview message={selected} onClose={() => setSelectedId(null)} />}
+      {selected && (
+        <MailPreview
+          message={selected}
+          onClose={() => setSelectedId(null)}
+          onCreateTask={
+            onCreateTask &&
+            ((message) => {
+              setSelectedId(null);
+              onCreateTask(message);
+            })
+          }
+        />
+      )}
     </Panel>
   );
 }

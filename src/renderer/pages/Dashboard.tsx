@@ -4,8 +4,11 @@ import { Empty, Panel, labels } from '../components/ui';
 import { ProjectList, TaskList } from '../components/Lists';
 import type { Project, Task } from '../../domain/models';
 import { DashboardMail } from '../components/DashboardMail';
+import type { MailMessage } from '../../domain/email';
 
 export interface Actions {
+  openProject: (project: Project) => void;
+  taskFromEmail: (message: MailMessage) => void;
   editProject: (project: Project) => void;
   deleteProject: (project: Project) => void;
   editTask: (task: Task) => void;
@@ -69,7 +72,10 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
       </div>
       <div className="dashboard-grid">
         <div className="dashboard-main">
-          <DashboardMail onOpenInbox={() => actions.navigate('Correos')} />
+          <DashboardMail
+            onOpenInbox={() => actions.navigate('Correos')}
+            onCreateTask={actions.taskFromEmail}
+          />
           <Panel
             title="Mi día · Actividades de hoy"
             icon="day"
@@ -110,6 +116,7 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
           >
             <ProjectList
               projects={summary.activeProjects.slice(0, 5)}
+              onOpen={actions.openProject}
               onEdit={actions.editProject}
               onDelete={actions.deleteProject}
             />

@@ -75,7 +75,7 @@ function ConnectionForm({
     </form>
   );
 }
-export function Emails() {
+export function Emails({ onCreateTask }: { onCreateTask?: (message: MailMessage) => void }) {
   const [status, setStatus] = useState<MailStatus | null>(null);
   const [page, setPage] = useState(0);
   const [data, setData] = useState<MailPage | null>(null);
@@ -308,7 +308,19 @@ export function Emails() {
           </button>
         </div>
       </Panel>
-      {selected && <MailPreview message={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <MailPreview
+          message={selected}
+          onClose={() => setSelected(null)}
+          onCreateTask={
+            onCreateTask &&
+            ((message) => {
+              setSelected(null);
+              onCreateTask(message);
+            })
+          }
+        />
+      )}
       {confirm && (
         <Modal title="Desconectar Microsoft 365" busy={busy} onClose={() => setConfirm(false)}>
           <div className="confirm-content">

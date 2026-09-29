@@ -42,7 +42,15 @@ export function MailList({
     </div>
   );
 }
-export function MailPreview({ message, onClose }: { message: MailMessage; onClose: () => void }) {
+export function MailPreview({
+  message,
+  onClose,
+  onCreateTask,
+}: {
+  message: MailMessage;
+  onClose: () => void;
+  onCreateTask?: (message: MailMessage) => void;
+}) {
   return (
     <Modal title="Vista previa del correo" onClose={onClose}>
       <div className="mail-detail">
@@ -59,6 +67,13 @@ export function MailPreview({ message, onClose }: { message: MailMessage; onClos
           adjuntos desde tu cliente institucional.
         </p>
       </div>
+      {onCreateTask && (
+        <div className="form-footer">
+          <button className="primary" onClick={() => onCreateTask(message)}>
+            Crear tarea desde correo
+          </button>
+        </div>
+      )}
     </Modal>
   );
 }

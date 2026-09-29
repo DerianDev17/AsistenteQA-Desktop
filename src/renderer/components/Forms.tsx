@@ -178,12 +178,16 @@ export function ProjectForm({
 }
 export function TaskForm({
   task,
+  initial,
+  context,
   projects,
   today,
   onSave,
   onClose,
 }: {
   task?: Task;
+  initial?: TaskInput;
+  context?: string;
   projects: Project[];
   today: string;
   onSave: (input: TaskInput) => Promise<void>;
@@ -201,7 +205,7 @@ export function TaskForm({
           dueTime: task.dueTime,
           waitingFor: task.waitingFor,
         }
-      : {
+      : (initial ?? {
           title: '',
           description: '',
           projectId: null,
@@ -210,14 +214,25 @@ export function TaskForm({
           dueDate: today,
           dueTime: null,
           waitingFor: 'USER',
-        },
+        }),
   );
   const change = <K extends keyof TaskInput>(key: K, value: TaskInput[K]) =>
     setData((previous) => ({ ...previous, [key]: value }));
   const { error, busy, submit } = useSave(() => onSave(taskInput(data)));
   return (
-    <Modal title={task ? 'Editar tarea' : 'Nueva tarea'} onClose={onClose} busy={busy}>
+    <Modal
+      title={task ? 'Editar tarea' : context ? 'Crear tarea desde correo' : 'Nueva tarea'}
+      onClose={onClose}
+      busy={busy}
+    >
       <form onSubmit={submit}>
+        {context && <p className="mail-task-context">{context}</p>}
+        {task?.source === 'EMAIL' && (
+          <p className="mail-task-context">
+            Origen: correo institucional. La tarea se conserva aunque el correo deje de estar
+            disponible.
+          </p>
+        )}
         <fieldset disabled={busy} className="form-grid">
           <label className="wide">
             Título de la tarea
