@@ -8,13 +8,14 @@ import { ProjectList, TaskList } from '../components/Lists';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { Dashboard, type Actions } from '../pages/Dashboard';
 import { Settings } from '../pages/Settings';
+import { Emails } from '../pages/Emails';
 
 const navigation: { name: string; icon: IconName; future?: boolean }[] = [
   { name: 'Inicio', icon: 'home' },
   { name: 'Mi Día', icon: 'day' },
   { name: 'Proyectos', icon: 'folder' },
   { name: 'Tareas', icon: 'check' },
-  { name: 'Correos', icon: 'mail', future: true },
+  { name: 'Correos', icon: 'mail' },
   { name: 'Calendario', icon: 'calendar', future: true },
   { name: 'Reuniones', icon: 'people', future: true },
   { name: 'Certificaciones', icon: 'shield', future: true },
@@ -311,6 +312,7 @@ export function App() {
                   )}
                 </>
               )}
+              {!query && page === 'Correos' && <Emails />}
               {!query && page === 'Configuración' && (
                 <Settings
                   settings={data.settings}

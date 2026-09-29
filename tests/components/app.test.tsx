@@ -29,7 +29,7 @@ it('muestra carga, estado vacío y navegación a módulos pendientes', async () 
     },
   });
   expect(await screen.findByText('Un espacio para tus proyectos')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Correos' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Calendario' }));
   expect(screen.getByText('Este módulo llegará en una próxima fase')).toBeInTheDocument();
 });
 it('permite reintentar cuando falla la carga', async () => {

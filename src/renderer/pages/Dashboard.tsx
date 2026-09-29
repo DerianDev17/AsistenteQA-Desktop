@@ -185,7 +185,7 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
         <Icon name="shield" size={18} />
         <span>Tu trabajo se guarda en este equipo.</span>
         <span className="muted">
-          Correo, calendario e IA se incorporarán en las siguientes fases.
+          Conecta Microsoft 365 desde Correos. Calendario e IA llegarán en próximas fases.
         </span>
       </div>
     </>

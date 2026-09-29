@@ -89,8 +89,8 @@ export function Settings({
           <strong>Versión 0.1 · Núcleo local</strong>
           <p>
             Proyectos y tareas disponibles sin conexión. La base de datos se guarda en la carpeta de
-            datos de QA Assistant Desktop del usuario de Windows. Las integraciones externas aún no
-            están conectadas.
+            datos de QA Assistant Desktop del usuario de Windows. Puedes configurar Microsoft 365
+            desde el módulo Correos.
           </p>
         </div>
       </form>
