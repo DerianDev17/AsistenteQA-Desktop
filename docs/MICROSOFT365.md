@@ -42,6 +42,8 @@ Mientras esté en curso, **Cancelar operación** detiene la espera de autorizaci
 
 El botón **Sincronizar ahora** permite actualizar manualmente. Con la opción automática activada, la app revisa al arrancar y cada cinco minutos mientras esté abierta o en la bandeja. No abre pantallas de login automáticamente. Las sesiones que necesiten consentimiento/MFA adicional requieren **Volver a autorizar**.
 
+En **Inicio**, el panel **Correo institucional** muestra la cuenta, la última sincronización, el total de correos descargados y los cinco mensajes más recientes con su vista previa. Puedes sincronizar desde ese panel o abrir **Correos** para consultar toda la bandeja. El dashboard consulta la copia local cada cinco segundos y al recuperar el foco; esa actualización de pantalla no realiza solicitudes a Microsoft. Los errores, la descarga incompleta y la necesidad de renovar acceso también aparecen en Inicio. Conectar una cuenta no crea proyectos ni tareas a partir de los mensajes; esa función sigue pendiente.
+
 La sincronización usa la [API delta de mensajes de Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/message-delta?view=graph-rest-1.0).
 
 ## Protección de datos

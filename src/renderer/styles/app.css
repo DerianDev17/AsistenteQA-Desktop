@@ -1305,3 +1305,28 @@ progress::-webkit-progress-value {
   overflow-wrap: anywhere;
   font-size: 13px;
 }
+.mail-dashboard-count {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 16px 23px;
+  font-size: 12px;
+}
+.dashboard-mail .mail-connection-summary {
+  flex-wrap: wrap;
+}
+.dashboard-mail .mail-connection-summary strong,
+.dashboard-mail .mail-subject {
+  overflow-wrap: anywhere;
+}
+.dashboard-mail .mail-item-top,
+.dashboard-mail .mail-subject,
+.dashboard-mail .panel-footer {
+  flex-wrap: wrap;
+}
+.dashboard-mail .mail-more {
+  margin: 0 23px 12px;
+}
+.mail-retry {
+  margin: 0 23px 16px;
+}

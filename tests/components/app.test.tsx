@@ -9,6 +9,9 @@ import type { QaApi } from '../../src/shared/api';
 it('muestra carga, estado vacío y navegación a módulos pendientes', async () => {
   let finish!: (value: Awaited<ReturnType<QaApi['snapshot']>>) => void;
   window.qa = {
+    mail: {
+      status: vi.fn().mockResolvedValue({ ok: true, value: { connected: false } }),
+    },
     snapshot: vi.fn(
       () =>
         new Promise((resolve) => {

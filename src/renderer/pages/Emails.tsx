@@ -4,6 +4,7 @@ import { mailConfig } from '../../domain/email';
 import { unwrap } from '../hooks/useWorkspace';
 import { Empty, ErrorNotice, Modal, Panel, relativeDate } from '../components/ui';
 import { Icon } from '../components/Icon';
+import { MailList, MailPreview } from '../components/MailMessages';
 
 function ConnectionForm({
   config,
@@ -285,40 +286,7 @@ export function Emails() {
               : 'Configura Microsoft Entra y conecta tu cuenta para ver tus correos aquí.'}
           </Empty>
         ) : (
-          <div className="mail-list">
-            {data.messages.map((message) => (
-              <button
-                className={`mail-item ${message.isRead ? '' : 'unread'}`}
-                key={message.id}
-                onClick={() => setSelected(message)}
-              >
-                <span className="mail-avatar">
-                  {(message.senderName || message.sender || '?').slice(0, 1).toUpperCase()}
-                </span>
-                <span className="mail-item-content">
-                  <span className="mail-item-top">
-                    <strong>
-                      {message.senderName || message.sender || 'Remitente no disponible'}
-                    </strong>
-                    <small>{relativeDate(message.receivedAt)}</small>
-                  </span>
-                  <span className="mail-subject">
-                    {message.subject}
-                    {message.importance === 'high' && (
-                      <span className="badge badge-high">Importante</span>
-                    )}
-                    {!message.isRead && <span className="dot blue" />}
-                  </span>
-                  <span className="mail-preview">{message.preview || 'Sin vista previa'}</span>
-                </span>
-                {message.hasAttachments && (
-                  <span className="muted" title="Contiene adjuntos">
-                    Adj.
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+          <MailList messages={data.messages} onSelect={setSelected} />
         )}
         <div className="panel-footer">
           <button
@@ -340,24 +308,7 @@ export function Emails() {
           </button>
         </div>
       </Panel>
-      {selected && (
-        <Modal title="Vista previa del correo" onClose={() => setSelected(null)}>
-          <div className="mail-detail">
-            <h3>{selected.subject}</h3>
-            <p className="muted">
-              {selected.senderName} {selected.sender && `‹${selected.sender}›`}
-            </p>
-            <p className="muted">{relativeDate(selected.receivedAt)}</p>
-            <p className="mail-detail-preview">
-              {selected.preview || 'Este correo no tiene vista previa.'}
-            </p>
-            <p className="integration-note">
-              Esta vista no marca el correo como leído en Outlook. Consulta el contenido completo y
-              los adjuntos desde tu cliente institucional.
-            </p>
-          </div>
-        </Modal>
-      )}
+      {selected && <MailPreview message={selected} onClose={() => setSelected(null)} />}
       {confirm && (
         <Modal title="Desconectar Microsoft 365" busy={busy} onClose={() => setConfirm(false)}>
           <div className="confirm-content">

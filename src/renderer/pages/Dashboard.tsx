@@ -3,6 +3,7 @@ import { Icon, type IconName } from '../components/Icon';
 import { Empty, Panel, labels } from '../components/ui';
 import { ProjectList, TaskList } from '../components/Lists';
 import type { Project, Task } from '../../domain/models';
+import { DashboardMail } from '../components/DashboardMail';
 
 export interface Actions {
   editProject: (project: Project) => void;
@@ -68,6 +69,7 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
       </div>
       <div className="dashboard-grid">
         <div className="dashboard-main">
+          <DashboardMail onOpenInbox={() => actions.navigate('Correos')} />
           <Panel
             title="Mi día · Actividades de hoy"
             icon="day"
@@ -185,7 +187,8 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
         <Icon name="shield" size={18} />
         <span>Tu trabajo se guarda en este equipo.</span>
         <span className="muted">
-          Conecta Microsoft 365 desde Correos. Calendario e IA llegarán en próximas fases.
+          Consulta tu correo institucional en Inicio y Correos. Calendario e IA llegarán en próximas
+          fases.
         </span>
       </div>
     </>

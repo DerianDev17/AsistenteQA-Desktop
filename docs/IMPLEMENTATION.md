@@ -26,7 +26,7 @@
 - Completar una tarea es idempotente. Reactivarla limpia `completedAt`. Finalizar un proyecto establece avance 100; reactivarlo limpia `closedAt`.
 - Finalizar un proyecto no cambia automáticamente las tareas vinculadas. Los seguimientos de proyectos cerrados se excluyen según RN-009.
 - Los seguimientos se calculan usando `updatedAt` de la tarea y el umbral de días completos transcurridos. No se envían mensajes.
-- El dashboard no muestra cifras inventadas de correos, clima o reuniones. El panel lateral identifica explícitamente su resumen como local.
+- El dashboard consulta el correo sincronizado: total local, cinco mensajes recientes, vista previa, estado y actualización manual. Se refresca cada cinco segundos y al recuperar el foco. Los errores del correo no bloquean proyectos ni tareas. El panel lateral conserva su resumen de actividades locales; los mensajes todavía no generan tareas automáticamente.
 - Un proyecto con tareas no se borra en cascada. Se exige desvincular o eliminar las tareas primero.
 - Los datos de tareas actualizan `lastActivityAt` del proyecto dentro de la misma transacción.
 - El calendario del sistema local determina Mi Día y se refresca cada minuto o al recuperar el foco.
