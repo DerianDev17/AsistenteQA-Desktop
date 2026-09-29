@@ -15,7 +15,8 @@
 | Bandeja y persistencia de preferencias                | Implementadas                                                                |
 | Seguimientos                                          | Sugerencia local derivada de tareas; sin entidad FollowUp persistida todavía |
 | Notificaciones                                        | Recordatorio básico de vencidas, opcional                                    |
-| Correo, calendario, IA y módulos QA                   | Pendientes                                                                   |
+| Correo Microsoft 365                                  | OAuth, caché cifrada y sincronización incremental de la bandeja de entrada   |
+| Calendario, IA y módulos QA                           | Pendientes                                                                   |
 | Instalador, firma y autoactualización                 | Pendientes                                                                   |
 
 ## Decisiones de esta entrega
@@ -39,6 +40,6 @@
 2. Seguimientos persistentes con aplazamiento, confirmación y deduplicación de avisos entre reinicios.
 3. Backup/exportación y restauración desde la aplicación, con pruebas de recuperación.
 4. Instalador Windows, recursos de marca y validación de rutas/migración en la aplicación empaquetada.
-5. Elegir proveedor corporativo de correo/calendario; implementar credenciales seguras, minimización de datos, sanitización y adapters antes de conectar información real.
+5. Completar el registro/consentimiento real de Microsoft 365, validar el buzón institucional y después ampliar a calendario, agrupación visual por hilo y sugerencias de tareas. La conexión, cifrado y sincronización básica de correo ya están implementados; ver [guía de conexión](MICROSOFT365.md).
 
 La primera entrega es ejecutable desde el repositorio; no constituye una release instalable para distribución corporativa.

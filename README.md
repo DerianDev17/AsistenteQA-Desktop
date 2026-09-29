@@ -1,6 +1,6 @@
 # QA Assistant Desktop
 
-Primera entrega del núcleo local de la aplicación para Windows. Implementa el Sprint 1 de la documentación y algunas funciones locales del Sprint 2. No requiere cuentas, claves ni conexión a servicios externos.
+Aplicación de escritorio para Windows con núcleo local de proyectos/tareas e integración opcional de correo Microsoft 365. Los proyectos y tareas funcionan sin cuenta ni conexión a servicios externos.
 
 ## Iniciar
 
@@ -37,7 +37,13 @@ La base se crea y migra automáticamente. La interfaz debe abrirse desde Electro
 
 La eliminación requiere confirmación. Los proyectos con tareas vinculadas no se pueden eliminar: hay que desvincular las tareas o finalizar el proyecto para conservar el historial. Los proyectos finalizados no generan sugerencias de seguimiento; sus tareas pendientes siguen visibles hasta completarlas o cancelarlas explícitamente.
 
-No se cargan datos ficticios. El resumen es determinista; no simula respuestas de IA ni una conexión de correo/calendario.
+No se cargan datos ficticios. El resumen es determinista; no simula respuestas de IA ni una conexión de calendario.
+
+## Conectar Microsoft 365
+
+Abre **Correos**, registra el client ID y tenant ID de Microsoft Entra y pulsa **Conectar y sincronizar**. La pantalla incluye instrucciones de registro. Consulta la [guía de Microsoft 365](docs/MICROSOFT365.md) para crear el registro o solicitarlo a TI.
+
+La conexión utiliza OAuth con PKCE y permiso delegado `Mail.Read`. Sincroniza los últimos 30 días de la bandeja de entrada, manualmente o cada cinco minutos, sin enviar correo ni modificar Outlook. Tokens y contenido del correo se cifran con el almacén seguro del sistema. La cuenta solo se conecta después de completar el login real en Microsoft.
 
 ## Datos y seguridad
 
@@ -47,7 +53,7 @@ Para una copia manual, cierra la aplicación con **Salir** y copia la carpeta de
 
 El renderer funciona con `contextIsolation`, `sandbox` y sin `nodeIntegration`. El preload expone operaciones concretas; el proceso principal valida datos, ventana, frame y URL. Se bloquean navegación externa, ventanas emergentes y permisos del navegador. Los errores internos se convierten a mensajes seguros y los logs registran códigos, no el contenido de proyectos o tareas.
 
-Esta versión almacena texto de productividad local sin cifrado y no tiene almacén de credenciales. No introduzcas secretos, datos de tarjetas ni material de producción en los campos libres. La sanitización de integraciones y el almacén seguro de credenciales pertenecen a las siguientes fases.
+El texto de proyectos y tareas se almacena localmente sin cifrado. No introduzcas secretos, datos de tarjetas ni material de producción en sus campos libres. Las credenciales y el contenido importado de Microsoft 365 sí se almacenan cifrados; consulta su alcance en la guía de conexión.
 
 ## Validar
 
@@ -82,6 +88,6 @@ El ejecutor de migraciones usa `_qa_migrations` con checksum y transacción, y n
 
 ## Siguientes entregas
 
-Ver [estado de implementación](docs/IMPLEMENTATION.md). Correo, calendario, reuniones, certificaciones y reportes aparecen como módulos pendientes. La IA, el instalador firmado, actualización automática y copia/restauración desde la interfaz todavía no están implementados.
+Ver [estado de implementación](docs/IMPLEMENTATION.md). La lectura de correo Microsoft 365 está implementada; calendario, reuniones, certificaciones y reportes aparecen como módulos pendientes. La IA, el instalador firmado, actualización automática y copia/restauración desde la interfaz todavía no están implementados.
 
 Documentación funcional original: `QA_Assistant_Desktop_Documentacion_V0.1.docx`, `qa-assistant-desktop.spec`, `qa-assistant-desktop.agent` y `ARCHITECTURE.md`.

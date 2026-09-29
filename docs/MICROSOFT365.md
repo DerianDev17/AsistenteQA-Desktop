@@ -1,0 +1,72 @@
+# Conectar el correo institucional de Microsoft 365
+
+La app ya incluye conexión OAuth y sincronización de correo. La cuenta real solo queda conectada cuando introduces el registro de tu institución y completas el acceso de Microsoft en el navegador.
+
+## 1. Registrar QA Assistant Desktop
+
+Entra al [centro de administración de Microsoft Entra](https://entra.microsoft.com/) con la cuenta institucional. Si no puedes registrar aplicaciones, entrega los requisitos de esta sección a TI.
+
+1. Abre **Identidad → Aplicaciones → Registros de aplicaciones → Nuevo registro** (la ubicación del menú puede variar).
+2. Nombre: **QA Assistant Desktop**.
+3. Tipos de cuenta: **Solo las cuentas de este directorio organizativo**.
+4. Registra la aplicación. Copia los valores de **Application (client) ID** y **Directory (tenant) ID** de Información general.
+5. En **Autenticación → Agregar una plataforma → Aplicaciones móviles y de escritorio**, registra **`http://localhost`** como URI de redirección. El puerto es dinámico. No selecciones plataforma Web ni SPA para este flujo.
+6. En **Permisos de API → Agregar un permiso → Microsoft Graph → Permisos delegados**, agrega **`Mail.Read`**. Es necesario para la vista previa del mensaje. No agregues permisos de aplicación, escritura o envío.
+7. Si la política de tu organización exige consentimiento administrativo o bloquea el registro de aplicaciones, TI debe autorizarlo. No es necesario crear un **client secret**: se usa un cliente público con PKCE.
+
+Estos pasos siguen la [configuración oficial de aplicaciones de escritorio](https://learn.microsoft.com/en-us/entra/identity-platform/scenario-desktop-app-configuration) y los [permisos de Microsoft Graph](https://learn.microsoft.com/en-us/graph/permissions-reference).
+
+## 2. Conectar desde la app
+
+```powershell
+npm ci
+npm run dev
+```
+
+1. Abre **Correos**.
+2. Introduce el **client ID** y el **tenant ID**. Son identificadores públicos; no introduzcas una contraseña ni un secreto de cliente.
+3. Elige si quieres sincronizar automáticamente cada cinco minutos y pulsa **Guardar conexión**.
+4. Pulsa **Conectar y sincronizar**.
+5. En el navegador de Microsoft, elige la cuenta institucional y completa MFA/consentimiento si se solicita.
+6. Regresa a QA Assistant. Verifica que aparezca tu cuenta y que se complete la primera sincronización.
+
+Mientras esté en curso, **Cancelar operación** detiene la espera de autorización o la sincronización. La recepción local del código expira después de tres minutos. La cuenta no se guarda si la operación fue cancelada.
+
+## Qué se sincroniza
+
+- Bandeja de entrada principal de Exchange Online en la nube global de Microsoft 365.
+- Mensajes recibidos en los últimos 30 días: asunto, remitente, vista previa, fecha, prioridad, estado leído e indicador de adjuntos.
+- Cambios incrementales mediante Microsoft Graph delta: mensajes nuevos, actualizaciones y mensajes eliminados o movidos fuera de la bandeja.
+- Páginas solicitadas de 50 mensajes y hasta 10 páginas por ejecución. Si quedan cambios, el cursor permite continuar manualmente o en la siguiente ejecución automática.
+- La lista local se pagina en bloques de 50. La retención de 30 días se aplica durante la sincronización; sin conexión se conserva la última copia disponible.
+
+El botón **Sincronizar ahora** permite actualizar manualmente. Con la opción automática activada, la app revisa al arrancar y cada cinco minutos mientras esté abierta o en la bandeja. No abre pantallas de login automáticamente. Las sesiones que necesiten consentimiento/MFA adicional requieren **Volver a autorizar**.
+
+La sincronización usa la [API delta de mensajes de Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/message-delta?view=graph-rest-1.0).
+
+## Protección de datos
+
+- OAuth Authorization Code + PKCE con MSAL Node, navegador del sistema, `state` aleatorio y listener ligado a loopback. Solo se abren URLs de autenticación de Microsoft generadas para el tenant configurado.
+- La contraseña se introduce exclusivamente en Microsoft. No se solicita un secreto de cliente ni se usa autenticación básica.
+- La caché de tokens, la cuenta y los cursores se guardan en `microsoft365.bin`, cifrado con `safeStorage` de Electron. En Windows utiliza protección del sistema vinculada al usuario. No se exponen por IPC.
+- El contenido del correo se guarda como un BLOB cifrado en SQLite. Solo identificadores y fecha de recepción quedan como metadatos de indexación. Además se redactan patrones comunes de tarjetas y credenciales; esta detección es una defensa adicional, no una garantía de identificar todo dato sensible.
+- Si el cifrado seguro del sistema no está disponible, la conexión falla sin guardar credenciales en texto plano.
+- Los correos se presentan como texto. No se ejecuta HTML ni se cargan imágenes remotas.
+- No se descargan adjuntos ni cuerpos completos. No se envía correo, no se cambia el estado leído de Outlook, no se crean tareas automáticamente y no se envía contenido a IA.
+- Los errores y logs no incluyen tokens, respuestas crudas de Microsoft ni contenido del correo.
+
+Consulta las propiedades y límites de [Electron safeStorage](https://www.electronjs.org/docs/latest/api/safe-storage). Esto no protege de programas que ya ejecutan código bajo el mismo usuario de Windows. Los proyectos y tareas existentes siguen en SQLite sin cifrado; utiliza sus campos para información de productividad, no para secretos.
+
+## Desconexión y recuperación
+
+**Desconectar cuenta** pide confirmación y elimina las credenciales locales y la caché de mensajes. No borra correos del servidor, no cambia proyectos/tareas y no cierra la sesión general del navegador. Para revocar el consentimiento del servicio, utiliza el portal de aplicaciones de tu institución o contacta con TI.
+
+Si Microsoft invalida un cursor, la app reinicia la copia local del correo y pide sincronizar para reconstruir los últimos 30 días. Los errores de red conservan la copia descargada. Las respuestas 429 y fallos temporales se reintentan de forma limitada, respetando `Retry-After`; las esperas superiores a 30 segundos se dejan para una sincronización posterior.
+
+Las credenciales cifradas no son portables a otra cuenta o equipo. Tras restaurar una copia en un entorno distinto, será necesario volver a conectar. Si `microsoft365.bin` no puede descifrarse, conserva una copia, cierra la app y retira únicamente ese archivo de su carpeta de datos para volver a configurar la conexión.
+
+## Validación y alcance pendiente
+
+Las pruebas cubren reglas, redacción, protección de URLs, reintentos, cursores, idempotencia, parches parciales, desconexión, cifrado, migración desde la base anterior, listener OAuth y configuración desde Electron. Usan cuentas sintéticas y respuestas simuladas; no conceden acceso a un buzón real.
+
+La validación final contra Microsoft depende del registro de Entra, consentimiento de la institución y login del usuario. No se debe declarar una cuenta conectada hasta completar ese proceso y ver correos reales. Quedan fuera de esta entrega carpetas adicionales, buzones compartidos, Exchange local, clasificación, agrupación visual por hilo y sugerencias de tareas.
