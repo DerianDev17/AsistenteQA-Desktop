@@ -1,0 +1,571 @@
+# QA Assistant Desktop — Agent Development Rules
+Version: 0.1
+
+You are the development agent responsible for implementing QA Assistant Desktop.
+
+Your job is not only to write code.
+Your job is to leave the repository in a production-quality, tested, understandable, and clean state after every task.
+
+## 1. Mandatory development behavior
+
+For every requested change, follow this sequence:
+
+1. Understand the requirement.
+2. Inspect the existing architecture and related code.
+3. Identify the smallest coherent implementation.
+4. Plan the change.
+5. Implement it using the project conventions.
+6. Add or update tests.
+7. Run the relevant test suite.
+8. Run lint.
+9. Run typecheck.
+10. Run build when applicable.
+11. Fix every regression caused by the change.
+12. Review the diff.
+13. Remove temporary/debug code.
+14. Split changes into logical atomic commits.
+15. Commit only passing, clean changes.
+16. Confirm `git status` is clean.
+
+Never skip testing because a change "looks simple".
+
+## 2. Read before writing
+
+Before modifying code:
+- inspect relevant files
+- inspect nearby patterns
+- reuse existing abstractions
+- understand current tests
+- understand data flow
+- inspect schema/migrations when database code is involved
+- inspect IPC contracts when Electron boundaries are involved
+
+Do not create duplicate architecture because you did not inspect the repository first.
+
+## 3. Good practices are mandatory
+
+Apply:
+- SOLID where useful
+- separation of concerns
+- dependency inversion
+- strong TypeScript typing
+- cohesive modules
+- explicit domain rules
+- small functions
+- descriptive naming
+- immutable data where practical
+- clear error handling
+- dependency injection at boundaries
+- reusable but not over-engineered abstractions
+
+Avoid:
+- god classes
+- giant React components
+- business logic in UI components
+- direct DB access from renderer
+- hidden global state
+- unnecessary singletons
+- `any` unless unavoidable and justified
+- silent catch blocks
+- copy/paste duplication
+- magic numbers / strings
+- premature abstraction
+
+## 4. Architecture rules
+
+Respect the dependency direction:
+
+Presentation
+    ↓
+Application
+    ↓
+Domain
+    ↓
+Infrastructure implementations
+
+Domain must not import:
+- Electron
+- React
+- Prisma
+- Node filesystem
+- Gmail
+- Microsoft Graph
+- AI SDKs
+
+Renderer must not directly access:
+- SQLite
+- Prisma
+- filesystem
+- credentials
+- shell
+- operating-system APIs
+
+Use:
+renderer -> preload -> IPC -> application -> repositories/adapters
+
+## 5. Electron security rules
+
+Required:
+- contextIsolation = true
+- nodeIntegration = false
+- narrow contextBridge APIs
+- validate IPC request payloads
+- validate IPC response assumptions
+- never expose arbitrary `invoke(channel, payload)` to renderer
+- never expose unrestricted fs/shell/database access
+- treat renderer input as untrusted
+
+## 6. Data and security rules
+
+Never commit or persist unsafe secrets.
+
+Forbidden in source control:
+- passwords
+- API keys
+- refresh tokens
+- OAuth secrets
+- production credentials
+- PIN
+- PIN Block
+- ZPK/ZMK
+- CVV/CVV2
+- full PAN
+
+Use secure credential storage for secrets.
+
+If sample data is needed:
+- use clearly fake values
+- mask PAN-like values
+- never reuse real production data
+
+If AI integration processes content:
+- sanitize sensitive values before sending
+- make external transmission explicit in architecture
+- preserve a local-first design where feasible
+
+## 7. Testing policy
+
+No feature is complete without tests appropriate to its risk.
+
+### Domain changes
+Add unit tests.
+
+### Application use-case changes
+Add unit tests and, when a boundary is involved, integration tests.
+
+### Database changes
+Add repository/integration tests.
+
+### IPC changes
+Test:
+- valid request
+- invalid request
+- expected response
+- expected errors
+
+### UI changes
+Test:
+- primary behavior
+- validation
+- empty state
+- loading state when relevant
+- error state when relevant
+
+### Critical workflow
+Add or update Playwright E2E coverage.
+
+## 8. Commands before commit
+
+Run the repository's actual scripts. Prefer these names when available:
+
+npm run lint
+npm run typecheck
+npm run test
+npm run test:integration
+npm run test:e2e
+npm run build
+
+If the repository uses different commands, discover and use the actual scripts.
+
+Do not claim checks passed unless they were actually executed.
+
+If a check fails:
+- investigate
+- fix the failure
+- rerun the failed check
+- rerun affected checks when necessary
+
+## 9. Commit policy
+
+Commits must be:
+- atomic
+- focused
+- reviewable
+- descriptive
+- independently understandable
+
+Use Conventional Commits.
+
+Allowed examples:
+- feat(projects): add next-action tracking
+- feat(tasks): persist task priorities
+- fix(ipc): reject invalid task payloads
+- test(projects): cover blocked project transitions
+- refactor(database): isolate prisma project repository
+- docs(agent): document commit workflow
+- chore(tooling): add typecheck script
+
+Bad examples:
+- update
+- fixes
+- changes
+- wip
+- final
+- stuff
+- multiple things
+- work
+
+## 10. How to split commits
+
+Do not create one huge commit for a multi-layer feature when the work can be separated cleanly.
+
+Preferred approach for a new feature:
+
+Commit 1:
+domain model / rule
+
+Commit 2:
+persistence / migration / repository
+
+Commit 3:
+application use case / service
+
+Commit 4:
+IPC boundary
+
+Commit 5:
+UI
+
+Commit 6:
+additional E2E or documentation if logically separate
+
+However:
+- do not split code and its essential unit tests if that makes the commit broken
+- each commit should ideally keep the repository buildable and tests passing
+
+## 11. Commit checklist
+
+Before every commit:
+
+- [ ] Requirement for this commit is clear
+- [ ] Diff contains one logical change
+- [ ] No unrelated formatting changes
+- [ ] No debug logs
+- [ ] No temporary files
+- [ ] No commented-out abandoned code
+- [ ] No secrets
+- [ ] Tests added/updated
+- [ ] Relevant tests pass
+- [ ] Lint passes
+- [ ] Typecheck passes
+- [ ] Build passes when applicable
+- [ ] `git diff --cached` reviewed
+- [ ] Commit message is descriptive
+
+After commit:
+
+- [ ] `git status` reviewed
+- [ ] Repository is clean unless more planned work remains
+- [ ] Next commit has a distinct purpose
+
+At the end of the requested task:
+- working tree MUST be clean
+
+## 12. Do not hide failures
+
+If a test is failing:
+- do not disable the test
+- do not mark it skipped merely to make CI green
+- do not weaken an assertion without explaining the product reason
+- do not swallow the underlying error
+- do not commit broken code
+
+If an existing unrelated test is already failing:
+- verify that it predates the change
+- document it clearly
+- do not mix an unrelated repair into the feature commit unless requested or required
+- if fixing it is necessary, use a separate commit
+
+## 13. Refactoring policy
+
+Refactor only when:
+- necessary for the requested change
+- it materially improves maintainability
+- it removes duplication
+- it makes testing possible
+
+Do not perform broad cosmetic refactors during an unrelated feature.
+
+If a meaningful refactor is necessary:
+- separate it into its own commit when possible
+- ensure behavior is unchanged
+- add tests before risky refactors when coverage is weak
+
+## 14. Database policy
+
+For Prisma / SQLite changes:
+- modify schema intentionally
+- generate/create migration
+- name migration clearly
+- never edit production data ad hoc in code
+- keep migrations reproducible
+- test repository behavior
+- verify migration path
+- never commit local database files unless explicitly part of test fixtures
+
+## 15. UI implementation rules
+
+For React:
+- keep components focused
+- extract complex logic into hooks/use cases
+- avoid business rules in JSX
+- prefer controlled forms
+- validate user input
+- provide clear empty states
+- provide clear error states
+- preserve accessibility basics
+- avoid unnecessary re-renders
+- do not introduce global state unless shared state truly requires it
+
+## 16. Error handling
+
+Errors must:
+- be explicit
+- include useful context
+- be transformed at architectural boundaries
+- never leak secrets
+- be user-friendly in UI
+- be structured in logs
+
+Avoid empty catches.
+
+Prefer:
+- typed domain/application errors
+- explicit result handling
+- logging at infrastructure boundaries
+- meaningful user messages
+
+## 17. Logging rules
+
+Allowed:
+- operation started
+- operation completed
+- entity ID
+- provider status
+- retry count
+- timing
+- sanitized error context
+
+Forbidden:
+- access tokens
+- passwords
+- full email bodies if sensitive
+- full PAN
+- PIN/PIN Block
+- cryptographic keys
+- authorization headers
+
+## 18. Documentation rules
+
+Update documentation when:
+- architecture changes
+- setup changes
+- environment requirements change
+- new external integration is added
+- new command/script is added
+- data model changes significantly
+- important security behavior changes
+
+Do not create documentation that contradicts code.
+
+## 19. Task execution protocol
+
+For each user task, internally structure work as:
+
+### A. Analyze
+- What is requested?
+- What modules are affected?
+- What risks exist?
+- What tests prove the behavior?
+
+### B. Plan
+Define small steps.
+
+### C. Implement
+Prefer the smallest correct change.
+
+### D. Validate
+Run tests and quality gates.
+
+### E. Review
+Review diff for:
+- correctness
+- security
+- unnecessary complexity
+- naming
+- architecture
+- dead code
+- accidental file changes
+
+### F. Commit
+Create logical commits.
+
+### G. Final verification
+Run:
+- git status
+- final relevant checks if needed
+
+The final task state must be:
+- tested
+- committed
+- clean
+
+## 20. Definition of Done for the agent
+
+A task is NOT done when:
+- code compiles only
+- UI looks correct only
+- implementation exists without tests
+- tests were not run
+- commits are messy
+- working tree is dirty
+- temporary artifacts remain
+
+A task IS done when:
+- behavior is correct
+- tests demonstrate it
+- checks pass
+- code follows project architecture
+- security rules are respected
+- commits are clean and separated
+- repository is clean
+
+## 21. Clean working tree policy
+
+At the end of every completed user request, execute or inspect equivalent of:
+
+git status --short
+
+Expected output:
+(empty)
+
+If not empty:
+- determine why
+- commit intended work in the appropriate atomic commit
+- remove unintended generated/temp files
+- do not leave untracked junk
+
+## 22. Generated files
+
+Do not commit:
+- build output
+- test reports unless intentionally versioned
+- coverage output
+- screenshots from temporary testing
+- local SQLite DB
+- logs
+- temp files
+- IDE workspace files unless project policy requires them
+
+Keep `.gitignore` updated.
+
+## 23. Dependency policy
+
+Before adding a dependency:
+1. Confirm existing libraries cannot solve it cleanly.
+2. Prefer mature, maintained packages.
+3. Avoid packages for trivial helpers.
+4. Check security implications.
+5. Add only to the correct dependency section.
+6. Commit lockfile updates.
+7. Document meaningful architectural dependencies.
+
+## 24. Performance policy
+
+Do not optimize without evidence.
+
+But avoid obviously poor patterns:
+- unbounded polling
+- loading all emails into memory
+- blocking Electron main process
+- large synchronous filesystem operations
+- N+1 database access
+- unnecessary rerenders
+
+Use pagination/batching for email and large datasets.
+
+## 25. External integration policy
+
+For email/calendar/AI integrations:
+- wrap provider SDK in an adapter
+- do not leak provider-specific types into domain
+- support mocks/fakes for tests
+- handle auth expiration
+- handle rate limits
+- handle network failure
+- use retry with controlled backoff
+- make sync idempotent where possible
+
+## 26. Scheduler policy
+
+Scheduled operations must be:
+- idempotent where practical
+- observable
+- cancelable/configurable
+- safe on app restart
+- protected from duplicate concurrent execution
+
+## 27. Branch/task hygiene
+
+If branch creation is part of the repository workflow:
+- use descriptive branch names
+- keep scope narrow
+
+Examples:
+feature/project-next-action
+feature/email-task-suggestions
+fix/task-due-date-timezone
+
+Do not merge unrelated work into a task branch.
+
+## 28. No automatic destructive Git operations
+
+Never use destructive operations without explicit necessity:
+- git reset --hard
+- git clean -fd
+- force push
+- rewriting published history
+
+Prefer safe, reviewable changes.
+
+## 29. Final report after implementation
+
+When reporting completed work, include concise information:
+- what was implemented
+- tests/checks executed
+- commit hashes/messages created
+- confirmation that working tree is clean
+
+Do not claim a commit exists unless it was actually created.
+
+## 30. Guiding rule
+
+Every development action should improve or preserve:
+- correctness
+- clarity
+- security
+- testability
+- maintainability
+- traceability
+
+The repository must always be easier to understand after your work than before it.
