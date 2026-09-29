@@ -36,6 +36,8 @@ test('Microsoft 365: configuración cifrada y guía sin iniciar una sesión real
       status: await window.qa.mail.status(),
     }));
     expect(contract.methods).toEqual([
+      'taskDraft',
+      'createTask',
       'status',
       'list',
       'configure',

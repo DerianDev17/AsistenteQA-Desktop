@@ -66,6 +66,7 @@ describe('SQLite, aplicación y contratos IPC', () => {
     expect(await db.$queryRawUnsafe('SELECT name FROM _qa_migrations')).toEqual([
       { name: '202609290001_initial' },
       { name: '202609290002_mail' },
+      { name: '202609290003_email_tasks' },
     ]);
   });
   it('protege referencias y permite eliminar después de desvincular', async () => {

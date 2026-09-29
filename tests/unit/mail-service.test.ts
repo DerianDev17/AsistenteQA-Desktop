@@ -40,6 +40,7 @@ function setup(initial = mailState) {
     })),
   };
   const repository: MailRepository = {
+    get: vi.fn(async () => null),
     apply: vi.fn(async () => undefined),
     clear: vi.fn(async () => undefined),
     list: vi.fn(async (_account, page) => ({ messages: [], page, total: 0, pageSize: 50 })),

@@ -18,7 +18,7 @@ function projectFromRow(row: ProjectRow): Project {
 }
 function taskFromRow(row: TaskRow): Task {
   const { id, source, sourceReference, createdAt, updatedAt, completedAt, ...input } = row;
-  if (source !== 'MANUAL')
+  if (source !== 'MANUAL' && source !== 'EMAIL')
     throw new AppError('INTERNAL', 'Origen de tarea no soportado en esta versión.');
   return { ...taskInput(input), id, source, sourceReference, createdAt, updatedAt, completedAt };
 }
@@ -53,6 +53,32 @@ export function repositories(db: PrismaClient): {
       },
     },
     tasks: {
+      findEmail: async (sourceReference) => {
+        const row = await db.task.findFirst({ where: { source: 'EMAIL', sourceReference } });
+        return row ? taskFromRow(row) : null;
+      },
+      createEmail: async (task) => {
+        if (task.source !== 'EMAIL' || !task.sourceReference)
+          throw new AppError('VALIDATION', 'El origen del correo no es válido.');
+        const where = { source: 'EMAIL', sourceReference: task.sourceReference };
+        try {
+          return await db.$transaction(async (tx) => {
+            const row = await tx.task.create({ data: task });
+            if (task.projectId)
+              await tx.project.update({
+                where: { id: task.projectId },
+                data: { lastActivityAt: task.updatedAt },
+              });
+            return { task: taskFromRow(row), created: true };
+          });
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            const previous = await db.task.findFirst({ where });
+            if (previous) return { task: taskFromRow(previous), created: false };
+          }
+          throw error;
+        }
+      },
       list: async () =>
         (await db.task.findMany({ orderBy: { updatedAt: 'desc' } })).map(taskFromRow),
       get: async (id) => {

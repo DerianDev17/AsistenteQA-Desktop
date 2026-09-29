@@ -8,6 +8,10 @@ export function mailRepository(db: PrismaClient, cipher: TextCipher): MailReposi
   const decode = (bytes: Uint8Array): MailContent =>
     JSON.parse(cipher.decrypt(bytes)) as MailContent;
   return {
+    get: async (accountId, id) => {
+      const row = await db.mailMessage.findFirst({ where: { accountId, id } });
+      return row ? { ...decode(row.content), id: row.id, providerId: row.providerId } : null;
+    },
     apply: (accountId, changes, since) =>
       db.$transaction(async (tx) => {
         await tx.mailMessage.deleteMany({ where: { accountId, receivedAt: { lt: since } } });

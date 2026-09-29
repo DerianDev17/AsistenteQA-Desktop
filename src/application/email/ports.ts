@@ -1,4 +1,4 @@
-import type { MailConfig, MailChange, MailPage } from '../../domain/email';
+import type { MailConfig, MailChange, MailPage, MailMessage } from '../../domain/email';
 
 // These private records never cross the preload boundary.
 export interface MailAccount {
@@ -39,6 +39,7 @@ export interface MailProvider {
   ): Promise<{ changes: MailChange[]; cursor: string; hasMore: boolean }>;
 }
 export interface MailRepository {
+  get(accountId: string, id: string): Promise<MailMessage | null>;
   apply(accountId: string, changes: MailChange[], since: string): Promise<void>;
   list(accountId: string, page: number): Promise<MailPage>;
   clear(): Promise<void>;

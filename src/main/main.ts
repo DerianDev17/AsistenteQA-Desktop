@@ -25,6 +25,9 @@ import { MicrosoftGraph } from '../infrastructure/email/microsoft-graph';
 import { mailRepository } from '../infrastructure/database/mail-repository';
 import { systemCipher } from './security/cipher';
 import { mailHandlers } from './ipc/mail.ipc';
+import { EmailTasks } from '../application/email/tasks';
+import { emailTaskSource } from '../infrastructure/email/task-source';
+import { emailTaskHandlers } from './ipc/email-tasks.ipc';
 
 const log = (operation: string, code: string) =>
   console.info(
@@ -67,11 +70,13 @@ else {
       const dataDir = app.getPath('userData');
       await mkdir(dataDir, { recursive: true });
       const db = await openDatabase(join(dataDir, 'workspace.db'));
+      const mailVault = new EncryptedMailVault(join(dataDir, 'microsoft365.bin'), systemCipher);
+      const messages = mailRepository(db, systemCipher);
       const mail = new MailService(
-        new EncryptedMailVault(join(dataDir, 'microsoft365.bin'), systemCipher),
+        mailVault,
         new MicrosoftAuth((url) => shell.openExternal(url)),
         new MicrosoftGraph(),
-        mailRepository(db, systemCipher),
+        messages,
       );
       disconnect = async () => {
         await mail.stop();
@@ -79,6 +84,12 @@ else {
       };
       const repos = repositories(db);
       const workspace = new Workspace(repos.projects, repos.tasks, repos.settings, randomUUID);
+      const emailTasks = new EmailTasks(
+        emailTaskSource(mailVault, messages),
+        repos.tasks,
+        repos.projects,
+        randomUUID,
+      );
       let settings = await repos.settings.get();
       const rendererPath = join(__dirname, '../renderer/index.html');
       const rendererUrl =
@@ -114,6 +125,7 @@ else {
       for (const [channel, handler] of Object.entries({
         ...handlers(workspace),
         ...mailHandlers(mail),
+        ...emailTaskHandlers(emailTasks),
       })) {
         ipcMain.handle(channel, (event, payload: unknown) =>
           respond(

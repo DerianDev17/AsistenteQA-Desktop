@@ -11,6 +11,8 @@ export interface TaskRepository {
   get(id: string): Promise<Task | null>;
   save(task: Task): Promise<Task>;
   delete(id: string): Promise<void>;
+  findEmail(reference: string): Promise<Task | null>;
+  createEmail(task: Task): Promise<{ task: Task; created: boolean }>;
 }
 export interface SettingsRepository {
   get(): Promise<Settings>;

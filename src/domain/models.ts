@@ -65,7 +65,7 @@ export interface TaskInput {
 }
 export interface Task extends TaskInput {
   id: string;
-  source: 'MANUAL';
+  source: 'MANUAL' | 'EMAIL';
   sourceReference: string | null;
   createdAt: string;
   updatedAt: string;

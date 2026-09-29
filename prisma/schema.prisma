@@ -44,6 +44,7 @@ model Task {
   completedAt     String?
   @@index([projectId])
   @@index([status, dueDate])
+  @@unique([source, sourceReference])
 }
 
 model Settings {

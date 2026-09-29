@@ -18,6 +18,8 @@ const disconnected: MailStatus = {
 };
 function mockApi(status = disconnected) {
   const mail: QaApi['mail'] = {
+    taskDraft: vi.fn(),
+    createTask: vi.fn(),
     status: vi.fn(async () => ({ ok: true as const, value: status })),
     list: vi.fn(async () => ({
       ok: true as const,
