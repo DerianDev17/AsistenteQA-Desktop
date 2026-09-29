@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Project {
+  id             String  @id
+  name           String
+  code           String
+  description    String
+  type           String
+  status         String
+  priority       String
+  progress       Int
+  nextAction     String
+  waitingFor     String
+  lastActivityAt String
+  createdAt      String
+  updatedAt      String
+  closedAt       String?
+  tasks          Task[]
+  @@index([status])
+}
+
+model Task {
+  id              String   @id
+  projectId       String?
+  project         Project? @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  title           String
+  description     String
+  status          String
+  priority        String
+  dueDate         String?
+  dueTime         String?
+  source          String
+  sourceReference String?
+  waitingFor      String
+  createdAt       String
+  updatedAt       String
+  completedAt     String?
+  @@index([projectId])
+  @@index([status, dueDate])
+}
+
+model Settings {
+  id             Int     @id @default(1)
+  minimizeToTray Boolean @default(true)
+  notifications  Boolean @default(false)
+  followUpDays   Int     @default(3)
+}

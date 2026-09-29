@@ -1,0 +1,11 @@
+node_modules
+out
+dist
+release
+coverage
+test-results
+playwright-report
+package-lock.json
+ARCHITECTURE.md
+qa-assistant-desktop.agent
+qa-assistant-desktop.spec

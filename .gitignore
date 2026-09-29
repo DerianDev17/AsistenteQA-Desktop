@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+release/
+coverage/
+test-results/
+playwright-report/
+*.db
+*.db-*
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
