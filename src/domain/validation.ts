@@ -10,7 +10,18 @@ import {
 
 export class AppError extends Error {
   constructor(
-    public readonly code: 'VALIDATION' | 'NOT_FOUND' | 'CONFLICT' | 'INTERNAL' | 'FORBIDDEN',
+    public readonly code:
+      | 'VALIDATION'
+      | 'NOT_FOUND'
+      | 'CONFLICT'
+      | 'INTERNAL'
+      | 'FORBIDDEN'
+      | 'AUTH_REQUIRED'
+      | 'CANCELLED'
+      | 'NETWORK'
+      | 'RATE_LIMIT'
+      | 'SYNC_RESET'
+      | 'SECURE_STORAGE',
     message: string,
   ) {
     super(message);

@@ -1,5 +1,6 @@
 import type { Snapshot } from '../application/workspace';
 import type { Project, ProjectInput, Task, TaskInput, Settings } from '../domain/models';
+import type { MailConfig, MailPage, MailStatus } from '../domain/email';
 
 export type Result<T> =
   { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
@@ -17,6 +18,15 @@ export interface QaApi {
     delete(id: string): Promise<Result<void>>;
   };
   settings: { save(data: Settings): Promise<Result<Settings>> };
+  mail: {
+    status(): Promise<Result<MailStatus>>;
+    list(page: number): Promise<Result<MailPage>>;
+    configure(config: MailConfig): Promise<Result<void>>;
+    connect(): Promise<Result<void>>;
+    sync(): Promise<Result<void>>;
+    cancel(): Promise<Result<void>>;
+    disconnect(): Promise<Result<void>>;
+  };
 }
 export const channels = {
   snapshot: 'workspace:snapshot',
@@ -28,4 +38,11 @@ export const channels = {
   taskComplete: 'task:complete',
   taskDelete: 'task:delete',
   settingsSave: 'settings:save',
+  mailStatus: 'mail:status',
+  mailList: 'mail:list',
+  mailConfigure: 'mail:configure',
+  mailConnect: 'mail:connect',
+  mailSync: 'mail:sync',
+  mailCancel: 'mail:cancel',
+  mailDisconnect: 'mail:disconnect',
 } as const;

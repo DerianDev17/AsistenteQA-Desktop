@@ -35,7 +35,7 @@ test('núcleo local: CRUD, Mi Día, búsqueda, aislamiento, tray y persistencia'
     ).toEqual({
       require: 'undefined',
       process: 'undefined',
-      api: ['snapshot', 'projects', 'tasks', 'settings'],
+      api: ['snapshot', 'projects', 'tasks', 'settings', 'mail'],
     });
     const preferences = await app.evaluate(({ BrowserWindow }) =>
       (

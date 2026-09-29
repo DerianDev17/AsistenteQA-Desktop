@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import initial from '../../../prisma/migrations/202609290001_initial/migration.sql?raw';
+import mail from '../../../prisma/migrations/202609290002_mail/migration.sql?raw';
 
 // Bundled SQL keeps startup independent of a globally installed Prisma CLI.
-const migrations = [{ name: '202609290001_initial', sql: initial }];
+const migrations = [
+  { name: '202609290001_initial', sql: initial },
+  { name: '202609290002_mail', sql: mail },
+];
 export async function openDatabase(path: string) {
   const client = new PrismaClient({
     datasources: { db: { url: `file:${path.replaceAll('\\', '/')}` } },
@@ -27,7 +31,7 @@ export async function openDatabase(path: string) {
         throw new Error('MIGRATION_CHECKSUM_MISMATCH');
       if (existing) continue;
       if (applied.length) {
-        const backup = `${path}.before-${migration.name}.bak`.replaceAll("'", "''");
+        const backup = `${path}.before-${migration.name}-${randomUUID()}.bak`.replaceAll("'", "''");
         await client.$executeRawUnsafe(`VACUUM INTO '${backup}'`);
       }
       await client.$transaction(async (tx) => {

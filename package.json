@@ -25,6 +25,7 @@
     "deepmerge-ts": "8.0.2"
   },
   "dependencies": {
+    "@azure/msal-node": "^7.0.0",
     "@prisma/client": "6.19.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

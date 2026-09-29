@@ -52,3 +52,13 @@ model Settings {
   notifications  Boolean @default(false)
   followUpDays   Int     @default(3)
 }
+
+model MailMessage {
+  id         String @id
+  accountId  String
+  providerId String
+  receivedAt String
+  content    Bytes
+  @@unique([accountId, providerId])
+  @@index([accountId, receivedAt, id])
+}

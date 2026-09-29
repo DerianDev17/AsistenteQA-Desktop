@@ -7,6 +7,9 @@ test-results/
 playwright-report/
 *.db
 *.db-*
+*.db.*.bak
+microsoft365.bin
+microsoft365.bin.*.tmp
 *.log
 .env
 .env.*

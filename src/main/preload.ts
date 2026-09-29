@@ -27,5 +27,14 @@ const api: QaApi = {
     delete: (id) => request(channels.taskDelete, id),
   },
   settings: { save: (data) => request(channels.settingsSave, data) },
+  mail: {
+    status: () => request(channels.mailStatus),
+    list: (page) => request(channels.mailList, { page }),
+    configure: (config) => request(channels.mailConfigure, config),
+    connect: () => request(channels.mailConnect),
+    sync: () => request(channels.mailSync),
+    cancel: () => request(channels.mailCancel),
+    disconnect: () => request(channels.mailDisconnect),
+  },
 };
 contextBridge.exposeInMainWorld('qa', api);

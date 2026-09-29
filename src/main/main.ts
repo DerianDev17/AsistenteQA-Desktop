@@ -7,6 +7,7 @@ import {
   nativeImage,
   Notification,
   Tray,
+  shell,
 } from 'electron';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -17,6 +18,13 @@ import { repositories } from '../infrastructure/database/repositories';
 import { Workspace } from '../application/workspace';
 import { handlers, respond, trustedSender } from './ipc/handlers';
 import { AppError } from '../domain/validation';
+import { MailService } from '../application/email/service';
+import { EncryptedMailVault } from '../infrastructure/security/mail-vault';
+import { MicrosoftAuth } from '../infrastructure/email/microsoft-auth';
+import { MicrosoftGraph } from '../infrastructure/email/microsoft-graph';
+import { mailRepository } from '../infrastructure/database/mail-repository';
+import { systemCipher } from './security/cipher';
+import { mailHandlers } from './ipc/mail.ipc';
 
 const log = (operation: string, code: string) =>
   console.info(
@@ -27,6 +35,7 @@ let tray: Tray | null = null;
 let quitting = false;
 let disconnect: (() => Promise<void>) | undefined;
 let timer: ReturnType<typeof setInterval> | undefined;
+let mailTimer: ReturnType<typeof setInterval> | undefined;
 
 if (process.env.QA_USER_DATA_DIR) app.setPath('userData', process.env.QA_USER_DATA_DIR);
 app.setName('QA Assistant Desktop');
@@ -43,6 +52,7 @@ else {
     event.preventDefault();
     quitting = true;
     if (timer) clearInterval(timer);
+    if (mailTimer) clearInterval(mailTimer);
     tray?.destroy();
     void (disconnect?.() ?? Promise.resolve())
       .catch(() => log('database:disconnect', 'INTERNAL'))
@@ -57,7 +67,16 @@ else {
       const dataDir = app.getPath('userData');
       await mkdir(dataDir, { recursive: true });
       const db = await openDatabase(join(dataDir, 'workspace.db'));
-      disconnect = () => db.$disconnect();
+      const mail = new MailService(
+        new EncryptedMailVault(join(dataDir, 'microsoft365.bin'), systemCipher),
+        new MicrosoftAuth((url) => shell.openExternal(url)),
+        new MicrosoftGraph(),
+        mailRepository(db, systemCipher),
+      );
+      disconnect = async () => {
+        await mail.stop();
+        await db.$disconnect();
+      };
       const repos = repositories(db);
       const workspace = new Workspace(repos.projects, repos.tasks, repos.settings, randomUUID);
       let settings = await repos.settings.get();
@@ -92,7 +111,10 @@ else {
         callback(false),
       );
       window.webContents.session.setPermissionCheckHandler(() => false);
-      for (const [channel, handler] of Object.entries(handlers(workspace))) {
+      for (const [channel, handler] of Object.entries({
+        ...handlers(workspace),
+        ...mailHandlers(mail),
+      })) {
         ipcMain.handle(channel, (event, payload: unknown) =>
           respond(
             channel,
@@ -147,6 +169,12 @@ else {
       window.once('ready-to-show', () => window?.show());
       await window.loadURL(trustedUrl);
       log('startup', 'OK');
+      const syncMail = () =>
+        void mail
+          .syncIfEnabled()
+          .catch((error) => log('mail:sync', error instanceof AppError ? error.code : 'INTERNAL'));
+      syncMail();
+      mailTimer = setInterval(syncMail, 5 * 60000);
       let checking = false;
       const notified = new Set<string>();
       timer = setInterval(() => {

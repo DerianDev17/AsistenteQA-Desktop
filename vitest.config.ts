@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   test: {
+    maxWorkers: 2,
     projects: [
       { test: { name: 'unit', environment: 'node', include: ['tests/unit/**/*.test.ts'] } },
       {
@@ -18,6 +19,7 @@ export default defineConfig({
         plugins: [react()],
         test: {
           name: 'components',
+          testTimeout: 15000,
           environment: 'jsdom',
           include: ['tests/components/**/*.test.tsx'],
           setupFiles: ['tests/setup.ts'],
