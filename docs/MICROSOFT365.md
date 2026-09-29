@@ -42,9 +42,19 @@ Mientras esté en curso, **Cancelar operación** detiene la espera de autorizaci
 
 El botón **Sincronizar ahora** permite actualizar manualmente. Con la opción automática activada, la app revisa al arrancar y cada cinco minutos mientras esté abierta o en la bandeja. No abre pantallas de login automáticamente. Las sesiones que necesiten consentimiento/MFA adicional requieren **Volver a autorizar**.
 
-En **Inicio**, el panel **Correo institucional** muestra la cuenta, la última sincronización, el total de correos descargados y los cinco mensajes más recientes con su vista previa. Puedes sincronizar desde ese panel o abrir **Correos** para consultar toda la bandeja. El dashboard consulta la copia local cada cinco segundos y al recuperar el foco; esa actualización de pantalla no realiza solicitudes a Microsoft. Los errores, la descarga incompleta y la necesidad de renovar acceso también aparecen en Inicio. Conectar una cuenta no crea proyectos ni tareas a partir de los mensajes; esa función sigue pendiente.
+En **Inicio**, el panel **Correo institucional** muestra la cuenta, la última sincronización, el total de correos descargados y los cinco mensajes más recientes con su vista previa. Puedes sincronizar desde ese panel o abrir **Correos** para consultar toda la bandeja. El dashboard consulta la copia local cada cinco segundos y al recuperar el foco; esa actualización de pantalla no realiza solicitudes a Microsoft. Los errores, la descarga incompleta y la necesidad de renovar acceso también aparecen en Inicio. Para crear una tarea, abre un mensaje y revisa su borrador antes de guardarlo.
 
 La sincronización usa la [API delta de mensajes de Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/message-delta?view=graph-rest-1.0).
+
+## Convertir un correo en tarea
+
+En **Inicio** o **Correos**, abre un mensaje y pulsa **Crear tarea desde correo**. La app propone un título basado en el asunto y prioridad alta si Microsoft marca el mensaje como importante. Revisa el título, añade una descripción si la necesitas y elige proyecto y fecha. La app no inventa un vencimiento y no guarda la tarea hasta que pulses **Guardar tarea**. El borrador no copia el cuerpo ni la vista previa del correo.
+
+El formulario explica que el texto aprobado pasa a las tareas locales, almacenadas sin cifrado: evita copiar información sensible. La copia original del correo permanece cifrada. La referencia de origen es un hash de la cuenta y el identificador del mensaje, sin guardar credenciales en la tarea.
+
+Cada correo puede originar una tarea. Volver a pulsar la acción abre la existente para editarla, y los intentos simultáneos se deduplican en SQLite sin sobrescribirla. La referencia se conserva aunque se reconstruya la copia del correo. Si eliminas la tarea, puedes crear otra desde el mismo mensaje. Desconectar la cuenta o eliminar el correo no elimina la tarea ya creada.
+
+Las tareas creadas aparecen en **Tareas**, en la ficha del proyecto elegido y en **Mi Día** según su fecha y estado. En **Proyectos**, pulsa el nombre para consultar contexto, avance, tareas y últimas actualizaciones; puedes filtrar las procedentes de correo. La agrupación por hilos, clasificación y detección automática de acciones siguen pendientes.
 
 ## Protección de datos
 
@@ -71,4 +81,4 @@ Las credenciales cifradas no son portables a otra cuenta o equipo. Tras restaura
 
 Las pruebas cubren reglas, redacción, protección de URLs, reintentos, cursores, idempotencia, parches parciales, desconexión, cifrado, migración desde la base anterior, listener OAuth y configuración desde Electron. Usan cuentas sintéticas y respuestas simuladas; no conceden acceso a un buzón real.
 
-La validación final contra Microsoft depende del registro de Entra, consentimiento de la institución y login del usuario. No se debe declarar una cuenta conectada hasta completar ese proceso y ver correos reales. Quedan fuera de esta entrega carpetas adicionales, buzones compartidos, Exchange local, clasificación, agrupación visual por hilo y sugerencias de tareas.
+La validación final contra Microsoft depende del registro de Entra, consentimiento de la institución y login del usuario. No se debe declarar una cuenta conectada hasta completar ese proceso y ver correos reales. Quedan fuera de esta entrega carpetas adicionales, buzones compartidos, Exchange local, clasificación, agrupación visual por hilo y extracción automática de acciones. El borrador de tarea a partir del asunto se revisa manualmente.

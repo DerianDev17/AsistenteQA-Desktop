@@ -45,6 +45,8 @@ Abre **Correos**, registra el client ID y tenant ID de Microsoft Entra y pulsa *
 
 La conexión utiliza OAuth con PKCE y permiso delegado `Mail.Read`. Sincroniza los últimos 30 días de la bandeja de entrada, manualmente o cada cinco minutos, sin enviar correo ni modificar Outlook. Tokens y contenido del correo se cifran con el almacén seguro del sistema. La cuenta solo se conecta después de completar el login real en Microsoft.
 
+Desde la vista previa de un mensaje puedes **Crear tarea desde correo**, revisar el borrador y elegir proyecto y fecha. El cuerpo del mensaje no se copia y no se guarda nada hasta pulsar **Guardar tarea**. Repetir la acción abre la tarea existente. El texto aprobado se almacena como tarea local sin cifrado; el correo original sigue cifrado. Abre el nombre de un proyecto para consultar su ficha, filtrar tareas y revisar sus últimas actualizaciones.
+
 ## Datos y seguridad
 
 En Windows, la ubicación predeterminada es `%APPDATA%\QA Assistant Desktop\workspace.db` (directorio `userData` de Electron). Los ensayos usan directorios temporales independientes mediante `QA_USER_DATA_DIR`.

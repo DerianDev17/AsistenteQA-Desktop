@@ -9,6 +9,8 @@
 | Prisma / SQLite y migración inicial                   | Implementado                                                                 |
 | CRUD de proyectos y tareas                            | Implementado                                                                 |
 | Relación entre proyecto y tarea                       | Implementado; eliminación protegida por clave foránea                        |
+| Ficha de proyecto                                     | Contexto, tareas filtrables, origen de correo y últimas actualizaciones      |
+| Tarea desde correo                                    | Borrador revisable, proyecto, fecha y deduplicación persistente por mensaje  |
 | Dashboard y Mi Día                                    | Implementados con datos reales                                               |
 | Próxima acción, esperando a, prioridades y avance     | Implementados                                                                |
 | Búsqueda y filtros                                    | Implementados para proyectos y tareas                                        |
@@ -36,10 +38,10 @@
 
 ## Próximo bloque recomendado
 
-1. Ficha detallada de proyecto con historial de tareas y actividad.
+1. Historial persistente de cambios de proyecto. La ficha ya muestra sus tareas y la última actualización de cada una; no es un registro de auditoría.
 2. Seguimientos persistentes con aplazamiento, confirmación y deduplicación de avisos entre reinicios.
 3. Backup/exportación y restauración desde la aplicación, con pruebas de recuperación.
 4. Instalador Windows, recursos de marca y validación de rutas/migración en la aplicación empaquetada.
-5. Completar el registro/consentimiento real de Microsoft 365, validar el buzón institucional y después ampliar a calendario, agrupación visual por hilo y sugerencias de tareas. La conexión, cifrado y sincronización básica de correo ya están implementados; ver [guía de conexión](MICROSOFT365.md).
+5. Ampliar correo a agrupación visual por hilo, clasificación y detección de acciones; añadir calendario. Ya puedes crear una tarea desde la vista previa de un correo, revisar su título y elegir proyecto/fecha. La conexión institucional fue completada por el usuario; las pruebas automatizadas utilizan datos sintéticos. Ver [guía de conexión](MICROSOFT365.md).
 
 La primera entrega es ejecutable desde el repositorio; no constituye una release instalable para distribución corporativa.
