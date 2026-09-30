@@ -12,6 +12,7 @@ import { Settings } from '../pages/Settings';
 import { Emails } from '../pages/Emails';
 import { ProjectDetail } from '../pages/ProjectDetail';
 import { Calendar } from '../pages/Calendar';
+import { Meetings } from '../pages/Meetings';
 import { Agenda } from '../components/Agenda';
 import { ActivitySuggestions } from '../components/ActivitySuggestions';
 
@@ -22,7 +23,7 @@ const navigation: { name: string; icon: IconName; future?: boolean }[] = [
   { name: 'Tareas', icon: 'check' },
   { name: 'Correos', icon: 'mail' },
   { name: 'Calendario', icon: 'calendar' },
-  { name: 'Reuniones', icon: 'people', future: true },
+  { name: 'Reuniones', icon: 'people' },
   { name: 'Certificaciones', icon: 'shield', future: true },
   { name: 'Reportes', icon: 'chart', future: true },
   { name: 'Configuración', icon: 'settings' },
@@ -242,7 +243,9 @@ export function App() {
                         ? 'Contexto, avances y próximos pasos de cada requerimiento.'
                         : page === 'Tareas'
                           ? 'Organiza tus pendientes y conserva cada avance.'
-                          : 'Tu asistente, a tu manera.'}
+                          : page === 'Reuniones'
+                            ? 'Consulta tus próximas reuniones y prepara el contexto del proyecto.'
+                            : 'Tu asistente, a tu manera.'}
               </p>
               <span className="hero-date">{date}</span>
             </div>
@@ -349,6 +352,15 @@ export function App() {
                 </>
               )}
               {!query && page === 'Correos' && <Emails onCreateTask={actions.taskFromEmail} />}
+              {!query && page === 'Reuniones' && (
+                <Meetings
+                  projects={data.projects}
+                  tasks={data.tasks}
+                  onCalendar={() => navigate('Calendario')}
+                  onProject={actions.openProject}
+                  onTask={actions.editTask}
+                />
+              )}
               {!query &&
                 page === 'Detalle de proyecto' &&
                 (() => {

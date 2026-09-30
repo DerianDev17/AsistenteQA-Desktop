@@ -1448,3 +1448,119 @@ progress::-webkit-progress-value {
   border-radius: 6px;
   padding: 9px 12px;
 }
+.meeting-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 23px;
+  font-size: 12px;
+}
+.meeting-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.meeting-toolbar input,
+.meeting-brief select {
+  background: #0b1525;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: inherit;
+  padding: 10px 12px;
+  font: inherit;
+}
+.meeting-toolbar input {
+  width: 240px;
+  max-width: 100%;
+}
+.meeting-brief select {
+  width: 100%;
+}
+.meeting-note {
+  margin: 0;
+  padding: 0 23px 16px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.meeting-list {
+  padding: 0 23px;
+}
+.meeting-list article {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.meeting-list article:last-child {
+  border-bottom: 0;
+}
+.meeting-copy {
+  flex: 1;
+  min-width: 160px;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.meeting-copy p,
+.meeting-copy small {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 7px 0;
+}
+.meeting-copy small {
+  display: block;
+}
+.meeting-copy .badge {
+  margin-right: 8px;
+}
+.meeting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.meeting-brief {
+  padding: 24px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.meeting-brief label {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+.meeting-brief > p {
+  line-height: 1.7;
+}
+.meeting-project-context {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.meeting-project-context p {
+  white-space: pre-wrap;
+}
+.meeting-task-list {
+  list-style: none;
+  padding: 0;
+}
+.meeting-task-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.meeting-task-list li button {
+  flex: 1;
+  min-width: 160px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.meeting-retry {
+  margin: 16px 23px;
+}
