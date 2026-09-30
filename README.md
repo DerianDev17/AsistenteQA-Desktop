@@ -24,7 +24,8 @@ Al arrancar se muestra un estado de carga. Si la interfaz no se descarga o tarda
 
 ## Funciones disponibles
 
-- Dashboard con cifras reales, actividades de hoy, proyectos y resumen local.
+- Inicio interactivo inspirado en el mockup: línea de tiempo de tareas y agenda, proyectos, correo, asistente local y próxima reunión con cuenta regresiva.
+- Tarjetas con navegación, revisión de pendientes que requieren atención y acciones para completar tareas, abrir proyectos y entrar a Teams.
 - Crear, editar y eliminar proyectos y tareas; vincular tareas con proyectos.
 - Estados, prioridades, fechas, horas, avance, próxima acción y esperando a.
 - Completar y reactivar tareas; finalizar y reactivar proyectos.
@@ -37,7 +38,8 @@ Al arrancar se muestra un estado de carga. Si la interfaz no se descarga o tarda
 - Seguimientos derivados de tareas en espera de terceros, con umbral configurable.
 - Bandeja del sistema: cerrar oculta la ventana; doble clic vuelve a abrirla; **Salir** cierra el proceso.
 - Preferencias persistentes para bandeja, notificaciones y días de seguimiento.
-- Notificación opcional de tareas vencidas, como máximo una por día durante cada ejecución. Se revisa cada minuto; reiniciar puede permitir un nuevo aviso ese mismo día.
+- Automatizaciones configurables desde Inicio: sincronización conjunta de correo/agenda cada cinco minutos, recordatorios y funcionamiento en la bandeja.
+- Avisos opcionales de reuniones diez minutos antes, vencidas y seguimientos diarios. Se revisan cada minuto mientras la app está abierta y se deduplican entre reinicios. Los recibos guardan hashes sin títulos ni contenido importado.
 - SQLite local: los datos se conservan al reiniciar y funcionan sin internet.
 
 La eliminación requiere confirmación. Los proyectos con tareas vinculadas no se pueden eliminar: hay que desvincular las tareas o finalizar el proyecto para conservar el historial. Los proyectos finalizados no generan sugerencias de seguimiento; sus tareas pendientes siguen visibles hasta completarlas o cancelarlas explícitamente.
