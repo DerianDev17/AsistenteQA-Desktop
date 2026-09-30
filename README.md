@@ -1,6 +1,6 @@
 # QA Assistant Desktop
 
-Aplicación de escritorio para Windows con núcleo local de proyectos/tareas e integración opcional de correo Microsoft 365. Los proyectos y tareas funcionan sin cuenta ni conexión a servicios externos.
+Aplicación de escritorio para Windows con núcleo local de proyectos/tareas e integración opcional de correo y calendario Microsoft 365. Los proyectos y tareas funcionan sin cuenta ni conexión a servicios externos.
 
 ## Iniciar
 
@@ -27,6 +27,9 @@ La base se crea y migra automáticamente. La interfaz debe abrirse desde Electro
 - Estados, prioridades, fechas, horas, avance, próxima acción y esperando a.
 - Completar y reactivar tareas; finalizar y reactivar proyectos.
 - Mi Día muestra tareas de hoy, vencidas y bloqueadas, excluyendo completadas y canceladas.
+- Agenda de Microsoft 365 en Inicio, Mi Día y Calendario, con invitaciones pendientes, cambios de horario y enlaces de Teams.
+- Reuniones próximas o en curso, filtros por Teams/respuesta y preparación local con el contexto y las tareas abiertas del proyecto elegido.
+- Propuestas revisables desde correos de certificación o proyecto, con asociación sugerida a un proyecto activo y exclusión de tareas ya creadas.
 - Búsqueda por proyecto/tarea y filtros de estado. `Ctrl+K` enfoca el buscador.
 - Señalización de proyectos activos sin próxima acción.
 - Seguimientos derivados de tareas en espera de terceros, con umbral configurable.
@@ -37,7 +40,7 @@ La base se crea y migra automáticamente. La interfaz debe abrirse desde Electro
 
 La eliminación requiere confirmación. Los proyectos con tareas vinculadas no se pueden eliminar: hay que desvincular las tareas o finalizar el proyecto para conservar el historial. Los proyectos finalizados no generan sugerencias de seguimiento; sus tareas pendientes siguen visibles hasta completarlas o cancelarlas explícitamente.
 
-No se cargan datos ficticios. El resumen es determinista; no simula respuestas de IA ni una conexión de calendario.
+No se cargan datos ficticios. El resumen y las sugerencias son deterministas; las integraciones requieren autorización real en Microsoft.
 
 ## Conectar Microsoft 365
 
@@ -46,6 +49,8 @@ Abre **Correos**, registra el client ID y tenant ID de Microsoft Entra y pulsa *
 La conexión utiliza OAuth con PKCE y permiso delegado `Mail.Read`. Sincroniza los últimos 30 días de la bandeja de entrada, manualmente o cada cinco minutos, sin enviar correo ni modificar Outlook. Tokens y contenido del correo se cifran con el almacén seguro del sistema. La cuenta solo se conecta después de completar el login real en Microsoft.
 
 Desde la vista previa de un mensaje puedes **Crear tarea desde correo**, revisar el borrador y elegir proyecto y fecha. El cuerpo del mensaje no se copia y no se guarda nada hasta pulsar **Guardar tarea**. Repetir la acción abre la tarea existente. El texto aprobado se almacena como tarea local sin cifrado; el correo original sigue cifrado. Abre el nombre de un proyecto para consultar su ficha, filtrar tareas y revisar sus últimas actualizaciones.
+
+Para reuniones, añade **Microsoft Graph → Permisos delegados → Calendars.Read** al registro de Entra y pulsa **Autorizar calendario** en la app. Los eventos del calendario principal aparecen como actividades de agenda, sin crear tareas duplicadas ni aceptar invitaciones. Se consultan siete días anteriores, hoy y los treinta días siguientes. La autorización de calendario es adicional a la conexión de correo.
 
 ## Datos y seguridad
 
@@ -90,6 +95,6 @@ El ejecutor de migraciones usa `_qa_migrations` con checksum y transacción, y n
 
 ## Siguientes entregas
 
-Ver [estado de implementación](docs/IMPLEMENTATION.md). La lectura de correo Microsoft 365 está implementada; calendario, reuniones, certificaciones y reportes aparecen como módulos pendientes. La IA, el instalador firmado, actualización automática y copia/restauración desde la interfaz todavía no están implementados.
+Ver [estado de implementación](docs/IMPLEMENTATION.md). Correo, agenda de Microsoft 365 y propuestas locales de actividades están implementados. El módulo de certificaciones, los reportes, la IA, el instalador firmado, actualización automática y copia/restauración desde la interfaz todavía no están implementados.
 
 Documentación funcional original: `QA_Assistant_Desktop_Documentacion_V0.1.docx`, `qa-assistant-desktop.spec`, `qa-assistant-desktop.agent` y `ARCHITECTURE.md`.

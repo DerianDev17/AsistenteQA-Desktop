@@ -1,4 +1,4 @@
-# Conectar el correo institucional de Microsoft 365
+# Conectar correo y calendario institucional de Microsoft 365
 
 La app ya incluye conexión OAuth y sincronización de correo. La cuenta real solo queda conectada cuando introduces el registro de tu institución y completas el acceso de Microsoft en el navegador.
 
@@ -54,7 +54,32 @@ El formulario explica que el texto aprobado pasa a las tareas locales, almacenad
 
 Cada correo puede originar una tarea. Volver a pulsar la acción abre la existente para editarla, y los intentos simultáneos se deduplican en SQLite sin sobrescribirla. La referencia se conserva aunque se reconstruya la copia del correo. Si eliminas la tarea, puedes crear otra desde el mismo mensaje. Desconectar la cuenta o eliminar el correo no elimina la tarea ya creada.
 
-Las tareas creadas aparecen en **Tareas**, en la ficha del proyecto elegido y en **Mi Día** según su fecha y estado. En **Proyectos**, pulsa el nombre para consultar contexto, avance, tareas y últimas actualizaciones; puedes filtrar las procedentes de correo. La agrupación por hilos, clasificación y detección automática de acciones siguen pendientes.
+Las tareas creadas aparecen en **Tareas**, en la ficha del proyecto elegido y en **Mi Día** según su fecha y estado. En **Proyectos**, pulsa el nombre para consultar contexto, avance, tareas y últimas actualizaciones; puedes filtrar las procedentes de correo.
+
+### Propuestas de certificaciones y proyectos
+
+**Inicio** y **Mi Día** muestran hasta diez propuestas basadas en los 150 correos descargados más recientes. Reglas locales revisan asunto y vista previa buscando certificación/homologación, acciones de proyecto y nombres o códigos de proyectos activos. Las coincidencias son orientativas: revisa el mensaje antes de guardar. No se analiza con IA ni se descarga el cuerpo completo.
+
+Pulsa **Revisar actividad**. Si hay un único proyecto coincidente, aparece preseleccionado; si hay varios, debes elegir. Las fechas siguen vacías hasta que tú las indiques. Se excluyen propuestas cuyos correos ya originaron una tarea, incluso completada. No existe aún una opción persistente para descartar propuestas.
+
+## Reuniones de Teams como actividades de agenda
+
+1. En el registro de **QA Assistant Desktop** en Microsoft Entra, abre **Permisos de API → Agregar un permiso → Microsoft Graph → Permisos delegados**.
+2. Añade **Calendars.Read** y conserva **Mail.Read**. La política de la institución puede exigir aprobación de TI.
+3. Reinicia la app con esta versión, abre **Calendario** y pulsa **Autorizar calendario**. Inicia sesión con la misma cuenta ya conectada.
+4. Comprueba la última sincronización y los eventos. **Sincronizar agenda** actualiza manualmente. La opción automática en Correos incluye el calendario autorizado cada cinco minutos mientras la app está abierta o en la bandeja.
+
+No basta con haber conectado el correo: el calendario solicita permiso adicional. Si Microsoft exige nueva autorización, el calendario lo indica sin marcar el acceso de correo como inválido. No requiere client secret ni permisos de escritura o lectura de chats de Teams.
+
+La agenda lee el **calendario principal de Outlook/Exchange Online**, donde aparecen las reuniones de Teams que se hayan agregado a ese calendario. No lee chats, canales ni calendarios compartidos. Los eventos se muestran automáticamente en **Inicio**, **Mi Día** y **Calendario**, con horario, estado de invitación y botón **Abrir Teams** cuando hay un enlace compatible. Son actividades de agenda, no nuevas filas de tareas; no se suman a los contadores de tareas.
+
+En **Reuniones** puedes filtrar los eventos próximos o en curso y abrir su preparación. Elige un proyecto para consultar su contexto, próxima acción y tareas abiertas, abrir su ficha o editar una tarea. La selección se usa solo durante la consulta; no guarda una asociación ni genera actas o un resumen con IA.
+
+La ventana descargada va desde la medianoche local de siete días atrás hasta la medianoche de hoy más 31 días, sin incluir ese último instante. Incluye las ocurrencias y excepciones de reuniones recurrentes. Una descarga completa sustituye la anterior: reprogramaciones, eventos eliminados y cancelaciones se reflejan en la siguiente sincronización. Las invitaciones rechazadas y canceladas no aparecen; las pendientes se marcan **Por responder**. La app no acepta ni rechaza invitaciones.
+
+Se solicitan páginas de 100 eventos, con límites de 20 páginas y 2000 eventos. Si una página falla o se supera el límite, se conserva toda la copia anterior y se muestra el error. Esta primera versión usa una instantánea acotada, no sincronización delta del calendario. Las consultas siguen la [API calendarView](https://learn.microsoft.com/en-us/graph/api/calendar-list-calendarview?view=graph-rest-1.0).
+
+El horario se recibe en UTC y se presenta en la zona horaria del equipo; los días completos respetan el intervalo final exclusivo. Eventos privados o confidenciales se muestran como **Evento privado**, sin organizador, ubicación ni enlace de reunión. No se descargan cuerpos, adjuntos ni listas de asistentes. Solo se abren enlaces HTTPS de los dominios de Teams permitidos, recuperados del evento de la cuenta actual por el proceso principal.
 
 ## Protección de datos
 
@@ -62,6 +87,7 @@ Las tareas creadas aparecen en **Tareas**, en la ficha del proyecto elegido y en
 - La contraseña se introduce exclusivamente en Microsoft. No se solicita un secreto de cliente ni se usa autenticación básica.
 - La caché de tokens, la cuenta y los cursores se guardan en `microsoft365.bin`, cifrado con `safeStorage` de Electron. En Windows utiliza protección del sistema vinculada al usuario. No se exponen por IPC.
 - El contenido del correo se guarda como un BLOB cifrado en SQLite. Solo identificadores y fecha de recepción quedan como metadatos de indexación. Además se redactan patrones comunes de tarjetas y credenciales; esta detección es una defensa adicional, no una garantía de identificar todo dato sensible.
+- La agenda se guarda como instantánea cifrada en `CalendarCache`, separada por cuenta. Incluye los campos visibles del evento y su enlace Teams; no se guarda como tarea sin cifrar. Correo y calendario serializan acceso a la caché OAuth y a las operaciones de sincronización.
 - Si el cifrado seguro del sistema no está disponible, la conexión falla sin guardar credenciales en texto plano.
 - Los correos se presentan como texto. No se ejecuta HTML ni se cargan imágenes remotas.
 - No se descargan adjuntos ni cuerpos completos. No se envía correo, no se cambia el estado leído de Outlook, no se crean tareas automáticamente y no se envía contenido a IA.
@@ -71,7 +97,7 @@ Consulta las propiedades y límites de [Electron safeStorage](https://www.electr
 
 ## Desconexión y recuperación
 
-**Desconectar cuenta** pide confirmación y elimina las credenciales locales y la caché de mensajes. No borra correos del servidor, no cambia proyectos/tareas y no cierra la sesión general del navegador. Para revocar el consentimiento del servicio, utiliza el portal de aplicaciones de tu institución o contacta con TI.
+**Desconectar cuenta** pide confirmación y elimina las credenciales locales, la caché de mensajes y la agenda descargada. No borra correos ni eventos del servidor, no cambia proyectos/tareas y no cierra la sesión general del navegador. Para revocar el consentimiento del servicio, utiliza el portal de aplicaciones de tu institución o contacta con TI.
 
 Si Microsoft invalida un cursor, la app reinicia la copia local del correo y pide sincronizar para reconstruir los últimos 30 días. Los errores de red conservan la copia descargada. Las respuestas 429 y fallos temporales se reintentan de forma limitada, respetando `Retry-After`; las esperas superiores a 30 segundos se dejan para una sincronización posterior.
 
@@ -81,4 +107,4 @@ Las credenciales cifradas no son portables a otra cuenta o equipo. Tras restaura
 
 Las pruebas cubren reglas, redacción, protección de URLs, reintentos, cursores, idempotencia, parches parciales, desconexión, cifrado, migración desde la base anterior, listener OAuth y configuración desde Electron. Usan cuentas sintéticas y respuestas simuladas; no conceden acceso a un buzón real.
 
-La validación final contra Microsoft depende del registro de Entra, consentimiento de la institución y login del usuario. No se debe declarar una cuenta conectada hasta completar ese proceso y ver correos reales. Quedan fuera de esta entrega carpetas adicionales, buzones compartidos, Exchange local, clasificación, agrupación visual por hilo y extracción automática de acciones. El borrador de tarea a partir del asunto se revisa manualmente.
+La validación final contra Microsoft depende del registro de Entra, consentimiento de la institución y login del usuario. No se debe declarar el calendario sincronizado hasta completar ese proceso y ver eventos reales. Quedan fuera de esta entrega carpetas adicionales, buzones/calendarios compartidos, Exchange local, chats de Teams, clasificación con IA, agrupación visual por hilo y extracción semántica de acciones. Las sugerencias usan reglas locales y el borrador de tarea se revisa manualmente. Los ensayos de calendario cubren cifrado, cancelación, cambios de horario, recurrencias, reintentos, errores de permisos y su visualización en Electron con datos sintéticos.
