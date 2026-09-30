@@ -1386,3 +1386,65 @@ progress::-webkit-progress-value {
   color: var(--muted);
   font-size: 12px;
 }
+.activity-intro,
+.agenda-status {
+  padding: 16px 22px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.agenda-status button {
+  margin: 8px 12px 0 0;
+}
+.suggestion-list,
+.agenda-list {
+  padding: 0 22px;
+}
+.suggestion-list article,
+.agenda-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.suggestion-list article > div,
+.agenda-list article > div {
+  flex: 1;
+  min-width: 180px;
+  overflow-wrap: anywhere;
+}
+.suggestion-list strong,
+.agenda-list strong {
+  display: block;
+  margin: 7px 0;
+}
+.suggestion-list p,
+.agenda-list p {
+  color: var(--muted);
+  margin: 7px 0;
+}
+.suggestion-list small,
+.agenda-list small {
+  color: var(--muted);
+}
+.calendar-filter {
+  justify-content: flex-start;
+  gap: 12px;
+}
+.calendar-filter label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.calendar-filter input {
+  color-scheme: dark;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+}

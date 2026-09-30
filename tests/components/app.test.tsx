@@ -10,7 +10,13 @@ it('muestra carga, estado vacío y navegación a módulos pendientes', async () 
   let finish!: (value: Awaited<ReturnType<QaApi['snapshot']>>) => void;
   window.qa = {
     mail: {
+      suggestions: vi.fn().mockResolvedValue({ ok: true, value: [] }),
       status: vi.fn().mockResolvedValue({ ok: true, value: { connected: false } }),
+    },
+    calendar: {
+      snapshot: vi
+        .fn()
+        .mockResolvedValue({ ok: true, value: { connected: false, enabled: false, events: [] } }),
     },
     snapshot: vi.fn(
       () =>
@@ -32,7 +38,7 @@ it('muestra carga, estado vacío y navegación a módulos pendientes', async () 
     },
   });
   expect(await screen.findByText('Un espacio para tus proyectos')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Calendario' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Reportes' }));
   expect(screen.getByText('Este módulo llegará en una próxima fase')).toBeInTheDocument();
 });
 it('permite reintentar cuando falla la carga', async () => {

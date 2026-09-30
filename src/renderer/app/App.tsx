@@ -11,6 +11,9 @@ import { Dashboard, type Actions } from '../pages/Dashboard';
 import { Settings } from '../pages/Settings';
 import { Emails } from '../pages/Emails';
 import { ProjectDetail } from '../pages/ProjectDetail';
+import { Calendar } from '../pages/Calendar';
+import { Agenda } from '../components/Agenda';
+import { ActivitySuggestions } from '../components/ActivitySuggestions';
 
 const navigation: { name: string; icon: IconName; future?: boolean }[] = [
   { name: 'Inicio', icon: 'home' },
@@ -18,7 +21,7 @@ const navigation: { name: string; icon: IconName; future?: boolean }[] = [
   { name: 'Proyectos', icon: 'folder' },
   { name: 'Tareas', icon: 'check' },
   { name: 'Correos', icon: 'mail' },
-  { name: 'Calendario', icon: 'calendar', future: true },
+  { name: 'Calendario', icon: 'calendar' },
   { name: 'Reuniones', icon: 'people', future: true },
   { name: 'Certificaciones', icon: 'shield', future: true },
   { name: 'Reportes', icon: 'chart', future: true },
@@ -279,6 +282,19 @@ export function App() {
           {data && (
             <>
               {!query && page === 'Inicio' && <Dashboard data={data} actions={actions} />}
+              {!query && page === 'Mi Día' && (
+                <>
+                  <Agenda
+                    day={data.today}
+                    onMail={() => navigate('Correos')}
+                    onCalendar={() => navigate('Calendario')}
+                  />
+                  <ActivitySuggestions onReview={actions.taskFromEmail} busy={busy} />
+                </>
+              )}
+              {!query && page === 'Calendario' && (
+                <Calendar today={data.today} onMail={() => navigate('Correos')} />
+              )}
               {(query || ['Proyectos', 'Tareas', 'Mi Día'].includes(page)) && (
                 <>
                   <div className="filter-bar">
@@ -316,7 +332,7 @@ export function App() {
                   )}
                   {(query || page !== 'Proyectos') && (
                     <Panel
-                      title={`${page === 'Mi Día' ? 'Actividades de hoy' : 'Tareas'} · ${tasks.length}`}
+                      title={`${page === 'Mi Día' ? 'Tareas de hoy' : 'Tareas'} · ${tasks.length}`}
                       icon="check"
                     >
                       <TaskList

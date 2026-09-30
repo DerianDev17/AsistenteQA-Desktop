@@ -63,7 +63,8 @@ function ConnectionForm({
             checked={data.autoSync}
             onChange={(e) => setData({ ...data, autoSync: e.target.checked })}
           />
-          Sincronizar automáticamente cada 5 minutos mientras la app esté abierta
+          Sincronizar automáticamente cada 5 minutos el correo y calendario autorizado mientras la
+          app esté abierta
         </label>
       </fieldset>
       {error && <ErrorNotice message={error} />}
@@ -325,8 +326,8 @@ export function Emails({ onCreateTask }: { onCreateTask?: (message: MailMessage)
         <Modal title="Desconectar Microsoft 365" busy={busy} onClose={() => setConfirm(false)}>
           <div className="confirm-content">
             <p>
-              Se eliminarán las credenciales y la copia local de los correos. Tu buzón de Microsoft,
-              proyectos y tareas no se modificarán.
+              Se eliminarán las credenciales, la copia local de los correos y la agenda descargada.
+              Tu buzón de Microsoft, proyectos y tareas no se modificarán.
             </p>
           </div>
           <div className="form-footer">

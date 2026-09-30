@@ -5,6 +5,8 @@ import { ProjectList, TaskList } from '../components/Lists';
 import type { Project, Task } from '../../domain/models';
 import { DashboardMail } from '../components/DashboardMail';
 import type { MailMessage } from '../../domain/email';
+import { Agenda } from '../components/Agenda';
+import { ActivitySuggestions } from '../components/ActivitySuggestions';
 
 export interface Actions {
   openProject: (project: Project) => void;
@@ -72,6 +74,13 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
       </div>
       <div className="dashboard-grid">
         <div className="dashboard-main">
+          <Agenda
+            day={data.today}
+            compact
+            onMail={() => actions.navigate('Correos')}
+            onCalendar={() => actions.navigate('Calendario')}
+          />
+          <ActivitySuggestions onReview={actions.taskFromEmail} busy={actions.busy} />
           <DashboardMail
             onOpenInbox={() => actions.navigate('Correos')}
             onCreateTask={actions.taskFromEmail}
@@ -194,8 +203,8 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
         <Icon name="shield" size={18} />
         <span>Tu trabajo se guarda en este equipo.</span>
         <span className="muted">
-          Consulta tu correo institucional en Inicio y Correos. Calendario e IA llegarán en próximas
-          fases.
+          Correo y agenda institucional en un solo lugar. La asistencia con IA llegará en una
+          próxima fase.
         </span>
       </div>
     </>

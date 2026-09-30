@@ -10,6 +10,12 @@ import { taskData } from '../fixtures';
 
 function setup() {
   const api = {
+    calendar: {
+      snapshot: vi.fn(async () => ({
+        ok: true,
+        value: { connected: false, enabled: false, events: [] },
+      })),
+    },
     snapshot: vi.fn(async () => ({
       ok: true,
       value: {
@@ -21,6 +27,7 @@ function setup() {
       },
     })),
     mail: {
+      suggestions: vi.fn(async () => ({ ok: true, value: [] })),
       status: vi.fn(async () => ({
         ok: true,
         value: {
