@@ -3,6 +3,7 @@ import type { Project, ProjectInput, Task, TaskInput, Settings } from '../domain
 import type { MailConfig, MailPage, MailStatus } from '../domain/email';
 import type { EmailTaskDraft } from '../application/email/tasks';
 import type { CalendarSnapshot } from '../domain/calendar';
+import type { MailActivitySuggestion } from '../domain/mail-activities';
 
 export type Result<T> =
   { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
@@ -28,6 +29,7 @@ export interface QaApi {
   };
   settings: { save(data: Settings): Promise<Result<Settings>> };
   mail: {
+    suggestions(): Promise<Result<MailActivitySuggestion[]>>;
     taskDraft(id: string): Promise<Result<EmailTaskDraft>>;
     createTask(id: string, data: TaskInput): Promise<Result<{ task: Task; created: boolean }>>;
     status(): Promise<Result<MailStatus>>;
@@ -55,6 +57,7 @@ export const channels = {
   taskDelete: 'task:delete',
   settingsSave: 'settings:save',
   mailStatus: 'mail:status',
+  mailSuggestions: 'mail:suggestions',
   mailTaskDraft: 'mail:task-draft',
   mailTaskCreate: 'mail:task-create',
   mailList: 'mail:list',

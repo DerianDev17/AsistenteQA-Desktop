@@ -35,6 +35,7 @@ const api: QaApi = {
   },
   settings: { save: (data) => request(channels.settingsSave, data) },
   mail: {
+    suggestions: () => request(channels.mailSuggestions),
     taskDraft: (id) => request(channels.mailTaskDraft, id),
     createTask: (id, data) => request(channels.mailTaskCreate, { id, data }),
     status: () => request(channels.mailStatus),

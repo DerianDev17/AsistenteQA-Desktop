@@ -10,6 +10,7 @@ import { taskData } from '../fixtures';
 
 function setup() {
   const source = {
+    recent: vi.fn(async () => []),
     resolve: vi.fn(async () => ({
       reference: 'opaque-reference',
       message: {
@@ -28,7 +29,7 @@ function setup() {
     findEmail: vi.fn(async (): Promise<Task | null> => null),
     createEmail: vi.fn(async (task: Task) => ({ task, created: true })),
   };
-  const projects = { list: vi.fn(), get: vi.fn(), save: vi.fn(), delete: vi.fn() };
+  const projects = { list: vi.fn(async () => []), get: vi.fn(), save: vi.fn(), delete: vi.fn() };
   const service = new EmailTasks(
     source,
     tasks,

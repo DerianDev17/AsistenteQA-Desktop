@@ -4,7 +4,27 @@ import type { MailRepository, MailVault } from '../../application/email/ports';
 import { AppError } from '../../domain/validation';
 
 export function emailTaskSource(vault: MailVault, messages: MailRepository): EmailTaskSource {
+  const reference = (accountId: string, providerId: string) =>
+    createHash('sha256')
+      .update(JSON.stringify([accountId, providerId]))
+      .digest('hex');
   return {
+    async recent() {
+      const { account } = await vault.load();
+      if (!account) return [];
+      const items: Awaited<ReturnType<EmailTaskSource['recent']>> = [];
+      for (let page = 0; page < 3; page++) {
+        const result = await messages.list(account.id, page);
+        items.push(
+          ...result.messages.map((message) => ({
+            message,
+            reference: reference(account.id, message.providerId),
+          })),
+        );
+        if ((page + 1) * result.pageSize >= result.total) break;
+      }
+      return items;
+    },
     async resolve(id) {
       const { account } = await vault.load();
       if (!account)
@@ -20,9 +40,7 @@ export function emailTaskSource(vault: MailVault, messages: MailRepository): Ema
         );
       return {
         message,
-        reference: createHash('sha256')
-          .update(JSON.stringify([account.id, message.providerId]))
-          .digest('hex'),
+        reference: reference(account.id, message.providerId),
       };
     },
   };

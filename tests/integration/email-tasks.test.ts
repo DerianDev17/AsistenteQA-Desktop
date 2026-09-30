@@ -96,6 +96,41 @@ it('dos creaciones simultáneas producen una sola tarea y nunca sobrescriben la 
   });
   expect(again.task.title).toBe(taskData.title);
 });
+it('sugiere certificación, propone un proyecto único y excluye tareas ya creadas', async () => {
+  const { service, messages, message, workspace, vault } = await setup();
+  const project = await workspace.createProject(projectData);
+  await messages.apply(
+    'fake-account',
+    [
+      {
+        providerId: 'fake-provider',
+        deleted: false,
+        data: {
+          ...mailContent,
+          subject: 'Certificación QA-001',
+        },
+      },
+    ],
+    '2026-08-30T00:00:00Z',
+  );
+  const api = emailTaskHandlers(service);
+  await expect(api[channels.mailSuggestions]({ accountId: 'other-account' })).rejects.toMatchObject(
+    { code: 'VALIDATION' },
+  );
+  expect(await api[channels.mailSuggestions](undefined)).toEqual([
+    expect.objectContaining({
+      category: 'CERTIFICATION',
+      projectId: project.id,
+    }),
+  ]);
+  const draft = await service.draft(message.id);
+  expect(draft.input).toMatchObject({ projectId: project.id, dueDate: null, description: '' });
+  expect(await db.task.count()).toBe(0);
+  await service.create({ id: message.id, data: draft.input });
+  expect(await service.suggestions()).toEqual([]);
+  await vault.save({ ...mailState, account: null });
+  expect(await service.suggestions()).toEqual([]);
+});
 it('deduplica después de reconstruir el correo local y conserva tareas al desconectar', async () => {
   const { service, messages, message, vault } = await setup();
   const created = await service.create({ id: message.id, data: taskData });
