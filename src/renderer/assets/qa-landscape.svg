@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="260" viewBox="0 0 1600 260">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#172b4c"/><stop offset=".7" stop-color="#4d3e5a"/><stop offset="1" stop-color="#bb786d"/></linearGradient>
+    <linearGradient id="mountain" x2="0" y2="1"><stop stop-color="#537a98"/><stop offset="1" stop-color="#162c43"/></linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1600v260H0z"/>
+  <path fill="#bba6b5" opacity=".15" d="m590 50 450-20 210 9 170-11 180 25-540 19zM1050 99l290-22 260 9v19l-230-4-270 12z"/>
+  <path fill="#314767" d="m400 260 170-80 100 16 190-108 131 88 74-40 186 42 117-39 232 94v27z"/>
+  <path fill="url(#mountain)" d="m660 260 215-109 68-70 47-16 97 91 186 104z"/>
+  <path fill="#c6d5e2" opacity=".8" d="m875 151 68-70 47-16 52 49-54-24-13 15-9-10-28 20-16 6-24 28-12-5z"/>
+  <path fill="#203851" d="m990 65 22 69 94 126h167l-186-104z"/>
+  <path fill="#102136" d="m0 230 115-30 112 12 93-33 187 44 195-35 202 39 184-35 243 19 141-39 128 48v40H0z"/>
+  <path fill="#091829" d="M0 248h70v-24h15v24h160v-35h18v35h26v-52h14v52h171v-20h20v20h61v-34h15v34h155v-24h18v24h402v-27h15v27h148v-44h18v44h125v-23h11v23h23v12H0z"/>
+</svg>

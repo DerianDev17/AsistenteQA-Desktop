@@ -44,6 +44,7 @@ export function App() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [meetingId, setMeetingId] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
@@ -56,6 +57,7 @@ export function App() {
     return () => window.removeEventListener('keydown', key);
   }, []);
   const navigate = (next: string) => {
+    setMeetingId(null);
     setPage(next);
     setSearch('');
     setFilter('all');
@@ -107,6 +109,10 @@ export function App() {
     newProject: () => setEditor({ kind: 'project' }),
     newTask: () => setEditor({ kind: 'task' }),
     navigate,
+    prepareMeeting: (event) => {
+      navigate('Reuniones');
+      setMeetingId(event.id);
+    },
     busy,
   };
   const query = search.trim().toLocaleLowerCase('es');
@@ -146,7 +152,7 @@ export function App() {
   }).format(data ? new Date(`${data.today}T12:00:00`) : new Date());
   const future = navigation.find((item) => item.name === page)?.future;
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${page === 'Inicio' && !query ? 'home-view' : ''}`}>
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-icon">
@@ -284,7 +290,15 @@ export function App() {
           )}
           {data && (
             <>
-              {!query && page === 'Inicio' && <Dashboard data={data} actions={actions} />}
+              {!query && page === 'Inicio' && (
+                <Dashboard
+                  data={data}
+                  actions={actions}
+                  onSettings={async (settings) => {
+                    await mutate(window.qa.settings.save(settings));
+                  }}
+                />
+              )}
               {!query && page === 'Mi Día' && (
                 <>
                   <Agenda
@@ -354,6 +368,7 @@ export function App() {
               {!query && page === 'Correos' && <Emails onCreateTask={actions.taskFromEmail} />}
               {!query && page === 'Reuniones' && (
                 <Meetings
+                  initialMeetingId={meetingId}
                   projects={data.projects}
                   tasks={data.tasks}
                   onCalendar={() => navigate('Calendario')}

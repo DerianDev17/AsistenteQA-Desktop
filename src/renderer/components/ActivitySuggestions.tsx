@@ -7,13 +7,19 @@ const load = () => unwrap(window.qa.mail.suggestions());
 export function ActivitySuggestions({
   onReview,
   busy,
+  compact = false,
 }: {
   onReview: (message: MailMessage) => void;
   busy: boolean;
+  compact?: boolean;
 }) {
   const { data, error } = useLiveQuery(load);
   return (
-    <Panel title="Actividades sugeridas por correo" icon="check">
+    <Panel
+      title="Actividades sugeridas por correo"
+      icon="check"
+      className={compact ? 'compact-suggestions' : ''}
+    >
       <p className="activity-intro">
         Certificaciones y proyectos detectados en los 150 correos locales más recientes. Son
         propuestas para revisar; no se guardan como tareas automáticamente.
@@ -26,7 +32,7 @@ export function ActivitySuggestions({
         </Empty>
       )}
       <div className="suggestion-list">
-        {data?.map((item) => (
+        {data?.slice(0, compact ? 3 : 10).map((item) => (
           <article key={item.message.id}>
             <div>
               <span className="badge">

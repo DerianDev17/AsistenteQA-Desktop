@@ -15,18 +15,20 @@ export function Meetings({
   onCalendar,
   onProject,
   onTask,
+  initialMeetingId,
 }: {
   projects: Project[];
   tasks: Task[];
   onCalendar: () => void;
   onProject: (project: Project) => void;
   onTask: (task: Task) => void;
+  initialMeetingId?: string | null;
 }) {
   const { data, error, refresh } = useLiveQuery(load);
   const [filter, setFilter] = useState<MeetingFilter>('all');
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(50);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialMeetingId ?? null);
   const [working, setWorking] = useState(false);
   const [operationError, setOperationError] = useState('');
   const now = new Date();

@@ -81,6 +81,8 @@ test('Reuniones filtra la agenda y prepara el contexto de un proyecto por el pre
           : { ok: false, error: { code: 'NOT_FOUND', message: 'Reunión desconocida.' } },
       );
     });
+    // Seeded IPC data must be read into a fresh renderer snapshot before exercising the UI.
+    await page.reload();
     await page.getByRole('button', { name: 'Reuniones', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Reuniones próximas' })).toBeVisible();
     await expect(page.getByText('Reserva del día', { exact: true })).toHaveCount(0);

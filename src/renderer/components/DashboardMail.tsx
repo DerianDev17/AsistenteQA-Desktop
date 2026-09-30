@@ -11,7 +11,24 @@ export function DashboardMail({
   onOpenInbox: () => void;
   onCreateTask?: (message: MailMessage) => void;
 }) {
-  const { data, error, working, refresh, sync } = useMailSummary();
+  const summary = useMailSummary();
+  return (
+    <DashboardMailContent summary={summary} onOpenInbox={onOpenInbox} onCreateTask={onCreateTask} />
+  );
+}
+
+export function DashboardMailContent({
+  summary,
+  onOpenInbox,
+  onCreateTask,
+  compact = false,
+}: {
+  summary: ReturnType<typeof useMailSummary>;
+  onOpenInbox: () => void;
+  onCreateTask?: (message: MailMessage) => void;
+  compact?: boolean;
+}) {
+  const { data, error, working, refresh, sync } = summary;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const status = data?.status;
   const busy = working || !!status?.busy;
@@ -21,7 +38,7 @@ export function DashboardMail({
     <Panel
       title="Correo institucional"
       icon="mail"
-      className="dashboard-mail"
+      className={`dashboard-mail ${compact ? 'compact-mail' : ''}`}
       action={
         <button className="text-button accent" onClick={onOpenInbox}>
           Ver correos

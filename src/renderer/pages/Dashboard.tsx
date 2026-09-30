@@ -1,12 +1,22 @@
+import { useRef, useState } from 'react';
 import type { Snapshot } from '../../application/workspace';
-import { Icon, type IconName } from '../components/Icon';
-import { Empty, Panel, labels } from '../components/ui';
-import { ProjectList, TaskList } from '../components/Lists';
-import type { Project, Task } from '../../domain/models';
-import { DashboardMail } from '../components/DashboardMail';
+import { eventsOnDay, type CalendarEvent } from '../../domain/calendar';
+import type { Project, Task, Settings } from '../../domain/models';
 import type { MailMessage } from '../../domain/email';
-import { Agenda } from '../components/Agenda';
+import { Icon, type IconName } from '../components/Icon';
+import { Empty, ErrorNotice, Panel, labels } from '../components/ui';
+import { DashboardMailContent } from '../components/DashboardMail';
 import { ActivitySuggestions } from '../components/ActivitySuggestions';
+import { DayTimeline } from '../components/DayTimeline';
+import { DashboardProjects } from '../components/DashboardProjects';
+import { DashboardCalendar } from '../components/DashboardCalendar';
+import { DashboardAutomation } from '../components/DashboardAutomation';
+import { NextMeeting } from '../components/NextMeeting';
+import { AttentionItems } from '../components/AttentionItems';
+import { useMailSummary } from '../hooks/useMailSummary';
+import { useLiveQuery } from '../hooks/useLiveQuery';
+import { useClock } from '../hooks/useClock';
+import { unwrap } from '../hooks/useWorkspace';
 
 export interface Actions {
   openProject: (project: Project) => void;
@@ -19,168 +29,159 @@ export interface Actions {
   newProject: () => void;
   newTask: () => void;
   navigate: (page: string) => void;
+  prepareMeeting?: (event: CalendarEvent) => void;
   busy: boolean;
 }
-export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions }) {
+const loadCalendar = () => unwrap(window.qa.calendar.snapshot());
+export function Dashboard({
+  data,
+  actions,
+  onSettings,
+}: {
+  data: Snapshot;
+  actions: Actions;
+  onSettings: (settings: Settings) => Promise<void>;
+}) {
   const { overview: summary } = data;
+  const calendar = useLiveQuery(loadCalendar);
+  const mail = useMailSummary();
+  const now = useClock();
+  const [joining, setJoining] = useState(false);
+  const [showAttention, setShowAttention] = useState(false);
+  const [operationError, setOperationError] = useState('');
+  const joiningRef = useRef(false);
+  const events = calendar.data?.events ?? [];
+  const agendaToday = calendar.data ? eventsOnDay(events, data.today) : null;
+  const meetings = agendaToday?.filter((event) => !event.allDay) ?? null;
+  const activities = summary.today.length + (agendaToday?.length ?? 0);
   const attention =
-    new Set([...summary.overdue, ...summary.blocked].map((task) => task.id)).size +
-    summary.attentionProjects.length;
-  const metrics: { title: string; value: number; note: string; icon: IconName; color: string }[] = [
+    new Set([...summary.overdue, ...summary.blocked, ...summary.followUps].map((task) => task.id))
+      .size + summary.attentionProjects.length;
+  const join = async (id: string) => {
+    if (joiningRef.current) return;
+    joiningRef.current = true;
+    setJoining(true);
+    setOperationError('');
+    try {
+      await unwrap(window.qa.calendar.openMeeting(id));
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : 'No se pudo abrir la reunión.');
+    } finally {
+      joiningRef.current = false;
+      setJoining(false);
+    }
+  };
+  const metrics: {
+    title: string;
+    value: number | null;
+    note: string;
+    icon: IconName;
+    color: string;
+    page: string;
+  }[] = [
     {
       title: 'Actividades de hoy',
-      value: summary.today.length,
-      note: 'Tu agenda y pendientes',
+      value: calendar.data ? activities : null,
+      note: `${summary.today.length} tareas · ${agendaToday?.length ?? '…'} de agenda`,
       icon: 'day',
       color: 'blue',
+      page: 'Mi Día',
     },
     {
       title: 'Requieren atención',
       value: attention,
-      note: 'Bloqueos y próximos pasos',
+      note: 'Bloqueos, vencidas y seguimientos',
       icon: 'alert',
       color: 'red',
+      page: 'Mi Día',
     },
     {
       title: 'Proyectos activos',
       value: summary.activeProjects.length,
-      note: 'En tu espacio de trabajo',
+      note: 'Ver próximos pasos',
       icon: 'folder',
       color: 'teal',
+      page: 'Proyectos',
     },
     {
-      title: 'Completadas hoy',
-      value: summary.completedToday.length,
-      note: 'Cada avance cuenta',
-      icon: 'check',
+      title: 'Reuniones hoy',
+      value: meetings?.length ?? null,
+      note: 'Agenda de Microsoft 365',
+      icon: 'people',
       color: 'purple',
+      page: 'Reuniones',
+    },
+    {
+      title: 'Correos locales',
+      value: mail.data?.inbox.total ?? null,
+      note: 'Bandeja · últimos 30 días',
+      icon: 'mail',
+      color: 'blue',
+      page: 'Correos',
     },
   ];
+  const shortcuts: { label: string; icon: IconName; run: () => void }[] = [
+    { label: 'Actividades de hoy', icon: 'day', run: () => actions.navigate('Mi Día') },
+    { label: 'Resumen de proyectos', icon: 'folder', run: () => actions.navigate('Proyectos') },
+    { label: 'Revisar correos', icon: 'mail', run: () => actions.navigate('Correos') },
+    { label: 'Preparar reunión', icon: 'people', run: () => actions.navigate('Reuniones') },
+  ];
+  const priority = summary.overdue[0] ?? summary.blocked[0] ?? summary.today[0];
   return (
     <>
-      <div className="metrics">
+      <div className="metrics operations-metrics">
         {metrics.map((metric) => (
-          <div className="metric" key={metric.title}>
+          <button
+            className="metric"
+            key={metric.title}
+            onClick={() =>
+              metric.title === 'Requieren atención'
+                ? setShowAttention(true)
+                : actions.navigate(metric.page)
+            }
+          >
             <span className={`metric-icon ${metric.color}`}>
               <Icon name={metric.icon} size={25} />
             </span>
             <div>
               <span>{metric.title}</span>
-              <strong>{metric.value}</strong>
+              <strong>{metric.value ?? '—'}</strong>
               <small>{metric.note}</small>
             </div>
-          </div>
+          </button>
         ))}
       </div>
-      <div className="dashboard-grid">
+      {(calendar.error || calendar.data?.error || operationError) && (
+        <ErrorNotice message={operationError || calendar.error || calendar.data?.error || ''} />
+      )}
+      {calendar.error && (
+        <button
+          className="text-button accent dashboard-retry"
+          onClick={() => void calendar.refresh()}
+        >
+          Reintentar agenda
+        </button>
+      )}
+      <div className="dashboard-grid operations-grid">
         <div className="dashboard-main">
-          <Agenda
-            day={data.today}
-            compact
-            onMail={() => actions.navigate('Correos')}
-            onCalendar={() => actions.navigate('Calendario')}
+          <DayTimeline
+            data={data}
+            events={events}
+            now={now}
+            actions={{ ...actions, busy: actions.busy || joining }}
+            onJoin={(id) => void join(id)}
+            calendarLoading={!calendar.data && !calendar.error}
           />
-          <ActivitySuggestions onReview={actions.taskFromEmail} busy={actions.busy} />
-          <DashboardMail
-            onOpenInbox={() => actions.navigate('Correos')}
-            onCreateTask={actions.taskFromEmail}
-          />
+          <DashboardProjects projects={summary.activeProjects} actions={actions} />
           <Panel
-            title="Mi día · Actividades de hoy"
-            icon="day"
+            title="Seguimientos pendientes"
+            icon="clock"
             action={
-              <button className="text-button accent" onClick={() => actions.navigate('Mi Día')}>
-                Ver mi día <Icon name="arrow" size={14} />
+              <button className="text-button accent" onClick={() => actions.navigate('Tareas')}>
+                Ver tareas
               </button>
             }
           >
-            <TaskList
-              tasks={summary.today.slice(0, 5)}
-              projects={data.projects}
-              today={data.today}
-              onEdit={actions.editTask}
-              onDelete={actions.deleteTask}
-              onComplete={actions.completeTask}
-              busy={actions.busy}
-            />
-            <div className="panel-footer">
-              <span>
-                {summary.today.length} actividades · {summary.overdue.length} vencidas
-              </span>
-              <button className="text-button accent" onClick={actions.newTask}>
-                <Icon name="plus" size={16} />
-                Añadir actividad
-              </button>
-            </div>
-          </Panel>
-          <Panel
-            title="Proyectos / Requerimientos"
-            icon="folder"
-            action={
-              <button className="small primary" onClick={actions.newProject}>
-                <Icon name="plus" size={15} />
-                Nuevo
-              </button>
-            }
-          >
-            <ProjectList
-              projects={summary.activeProjects.slice(0, 5)}
-              onOpen={actions.openProject}
-              onEdit={actions.editProject}
-              onDelete={actions.deleteProject}
-            />
-            <div className="panel-footer">
-              <span>Estado real de tus proyectos</span>
-              <button className="text-button accent" onClick={() => actions.navigate('Proyectos')}>
-                Ver todos <Icon name="arrow" size={14} />
-              </button>
-            </div>
-          </Panel>
-        </div>
-        <aside className="dashboard-side">
-          <Panel title="Tu resumen local" icon="robot" className="assistant">
-            <div className="assistant-greeting">
-              Hola, Derian.
-              <br />
-              <strong>Todo tu trabajo, en contexto.</strong>
-            </div>
-            <p className="assistant-copy">Esta es tu jornada según los datos que has registrado.</p>
-            <ul className="summary-list">
-              <li>
-                <span className="dot blue" />
-                {summary.today.length} actividades para atender
-              </li>
-              <li>
-                <span className="dot red" />
-                {summary.overdue.length} tareas vencidas
-              </li>
-              <li>
-                <span className="dot teal" />
-                {summary.activeProjects.length} proyectos abiertos
-              </li>
-              <li>
-                <span className="dot purple" />
-                {summary.completedToday.length} tareas completadas hoy
-              </li>
-            </ul>
-            <button className="assistant-action" onClick={() => actions.navigate('Mi Día')}>
-              <Icon name="day" />
-              Organizar mi día
-              <Icon name="arrow" size={16} />
-            </button>
-            <button className="assistant-action" onClick={() => actions.navigate('Proyectos')}>
-              <Icon name="folder" />
-              Revisar proyectos
-              <Icon name="arrow" size={16} />
-            </button>
-            <div className="integration-note">
-              <span className="tiny-label">PRÓXIMAMENTE</span>
-              <p>
-                El asistente con IA llegará en una próxima fase. Este resumen se calcula localmente.
-              </p>
-            </div>
-          </Panel>
-          <Panel title="Seguimientos pendientes" icon="clock">
             {summary.followUps.length ? (
               <div className="follow-ups">
                 {summary.followUps.slice(0, 4).map((task) => (
@@ -192,21 +193,105 @@ export function Dashboard({ data, actions }: { data: Snapshot; actions: Actions 
               </div>
             ) : (
               <Empty title="Sin seguimientos pendientes" icon="clock">
-                Te avisaremos de tareas que esperen a terceros más de {data.settings.followUpDays}{' '}
-                días.
+                Se detectan tareas que esperan a terceros más de {data.settings.followUpDays} días.
               </Empty>
             )}
           </Panel>
+        </div>
+        <div className="dashboard-middle">
+          <DashboardMailContent
+            summary={mail}
+            compact
+            onOpenInbox={() => actions.navigate('Correos')}
+            onCreateTask={actions.taskFromEmail}
+          />
+          <DashboardCalendar
+            calendar={calendar.data}
+            unavailable={!!calendar.error}
+            day={data.today}
+            onCalendar={() => actions.navigate('Calendario')}
+          />
+          <ActivitySuggestions compact onReview={actions.taskFromEmail} busy={actions.busy} />
+        </div>
+        <aside className="dashboard-side">
+          <Panel title="Asistente local" icon="robot" className="assistant">
+            <div className="assistant-greeting">
+              Hola, Derian.
+              <br />
+              <strong>Tu siguiente paso, a la vista.</strong>
+            </div>
+            <ul className="summary-list">
+              <li>
+                <span className="dot blue" />
+                {activities} actividades en tu día
+              </li>
+              <li>
+                <span className="dot red" />
+                {summary.overdue.length} tareas vencidas
+              </li>
+              <li>
+                <span className="dot purple" />
+                {meetings?.length ?? '…'} reuniones hoy
+              </li>
+              <li>
+                <span className="dot teal" />
+                {summary.completedToday.length} tareas completadas hoy
+              </li>
+            </ul>
+            {priority && (
+              <button className="next-action" onClick={() => actions.editTask(priority)}>
+                <small>
+                  {summary.overdue.some((task) => task.id === priority.id)
+                    ? 'ATENDER PRIMERO'
+                    : 'SIGUIENTE ACTIVIDAD'}
+                </small>
+                <strong>{priority.title}</strong>
+                <span>
+                  Revisar tarea <Icon name="arrow" size={13} />
+                </span>
+              </button>
+            )}
+            {shortcuts.map((shortcut) => (
+              <button key={shortcut.label} className="assistant-action" onClick={shortcut.run}>
+                <Icon name={shortcut.icon} />
+                {shortcut.label}
+                <Icon name="arrow" size={14} />
+              </button>
+            ))}
+            <p className="assistant-local-note">
+              Resumen y reglas locales. Actualizados con tus datos.
+            </p>
+          </Panel>
+          <NextMeeting
+            state={calendar.data ? 'ready' : calendar.error ? 'unavailable' : 'loading'}
+            events={events}
+            now={now}
+            onPrepare={(event) =>
+              event && actions.prepareMeeting
+                ? actions.prepareMeeting(event)
+                : actions.navigate('Reuniones')
+            }
+            onJoin={(id) => void join(id)}
+            busy={joining}
+          />
+          <DashboardAutomation
+            settings={data.settings}
+            mail={mail}
+            calendar={calendar.data}
+            onSettings={onSettings}
+            onRefresh={() => Promise.all([calendar.refresh(), mail.refresh()])}
+            onMail={() => actions.navigate('Correos')}
+          />
         </aside>
       </div>
       <div className="connection-strip">
         <Icon name="shield" size={18} />
         <span>Tu trabajo se guarda en este equipo.</span>
-        <span className="muted">
-          Correo y agenda institucional en un solo lugar. La asistencia con IA llegará en una
-          próxima fase.
-        </span>
+        <span className="muted">Correo y agenda se actualizan con Microsoft 365.</span>
       </div>
+      {showAttention && (
+        <AttentionItems data={data} actions={actions} onClose={() => setShowAttention(false)} />
+      )}
     </>
   );
 }
