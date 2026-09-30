@@ -68,6 +68,7 @@ describe('SQLite, aplicación y contratos IPC', () => {
       { name: '202609290002_mail' },
       { name: '202609290003_email_tasks' },
       { name: '202609300001_calendar' },
+      { name: '202609300002_reminders' },
     ]);
   });
   it('protege referencias y permite eliminar después de desvincular', async () => {

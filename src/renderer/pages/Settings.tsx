@@ -48,10 +48,10 @@ export function Settings({
         </label>
         <label className="setting-row">
           <span>
-            <strong>Notificaciones de tareas vencidas</strong>
+            <strong>Recordatorios de tareas y reuniones</strong>
             <small>
-              Un recordatorio diario mientras la aplicación está abierta. La revisión se realiza
-              cada minuto.
+              Reuniones 10 minutos antes, tareas vencidas y seguimientos diarios. Se revisan cada
+              minuto mientras la aplicación está abierta; no se repiten al reiniciar.
             </small>
           </span>
           <input

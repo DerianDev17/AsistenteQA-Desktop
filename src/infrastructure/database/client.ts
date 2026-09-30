@@ -4,6 +4,7 @@ import initial from '../../../prisma/migrations/202609290001_initial/migration.s
 import mail from '../../../prisma/migrations/202609290002_mail/migration.sql?raw';
 import emailTasks from '../../../prisma/migrations/202609290003_email_tasks/migration.sql?raw';
 import calendar from '../../../prisma/migrations/202609300001_calendar/migration.sql?raw';
+import reminders from '../../../prisma/migrations/202609300002_reminders/migration.sql?raw';
 
 // Bundled SQL keeps startup independent of a globally installed Prisma CLI.
 const migrations = [
@@ -11,6 +12,7 @@ const migrations = [
   { name: '202609290002_mail', sql: mail },
   { name: '202609290003_email_tasks', sql: emailTasks },
   { name: '202609300001_calendar', sql: calendar },
+  { name: '202609300002_reminders', sql: reminders },
 ];
 export async function openDatabase(path: string) {
   const client = new PrismaClient({

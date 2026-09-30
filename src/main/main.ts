@@ -32,6 +32,9 @@ import { mailHandlers } from './ipc/mail.ipc';
 import { EmailTasks } from '../application/email/tasks';
 import { emailTaskSource } from '../infrastructure/email/task-source';
 import { emailTaskHandlers } from './ipc/email-tasks.ipc';
+import { reminders } from '../domain/reminders';
+import { deliverReminders } from '../application/reminders';
+import { reminderReceipts } from '../infrastructure/database/reminder-receipts';
 
 const log = (operation: string, code: string) =>
   console.info(
@@ -219,24 +222,29 @@ else {
       syncMail();
       mailTimer = setInterval(syncMail, 5 * 60000);
       let checking = false;
-      const notified = new Set<string>();
+      const receipts = reminderReceipts(db);
       timer = setInterval(() => {
         if (checking || !settings.notifications || !Notification.isSupported()) return;
         checking = true;
         void workspace
           .snapshot()
-          .then((snapshot) => {
+          .then(async (snapshot) => {
             if (!settings.notifications || quitting) return;
-            const count = snapshot.overview.overdue.length;
-            const key = snapshot.today;
-            if (!count || notified.has(key)) return;
-            notified.add(key);
-            const notice = new Notification({
-              title: 'QA Assistant · Tareas vencidas',
-              body: `Tienes ${count} ${count === 1 ? 'tarea pendiente' : 'tareas pendientes'} de días anteriores. Revisa Mi Día.`,
-            });
-            notice.on('click', () => window?.show());
-            notice.show();
+            const agenda = await calendar.snapshot();
+            await deliverReminders(
+              reminders(snapshot.overview, agenda.events, new Date()),
+              receipts,
+              (reminder) => {
+                const notice = new Notification({ title: reminder.title, body: reminder.body });
+                notice.on('click', () => {
+                  window?.show();
+                  window?.focus();
+                });
+                notice.show();
+              },
+              new Date(),
+              () => settings.notifications && !quitting,
+            );
           })
           .catch(() => log('notifications:check', 'INTERNAL'))
           .finally(() => {

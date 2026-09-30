@@ -68,3 +68,9 @@ model CalendarCache {
   accountId String @id
   content   Bytes
 }
+
+model ReminderReceipt {
+  key         String @id
+  deliveredAt String
+  @@index([deliveredAt])
+}
