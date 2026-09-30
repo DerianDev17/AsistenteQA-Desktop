@@ -8,9 +8,17 @@
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws://localhost:* ws://127.0.0.1:*; object-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <title>QA Assistant Desktop</title>
+    <link rel="stylesheet" href="/startup.css" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="startup-screen" class="startup-screen" role="status">
+        <h1 id="startup-title">QA Assistant Desktop</h1>
+        <p id="startup-message">Cargando tu espacio de trabajo…</p>
+        <button id="startup-retry" hidden>Reintentar carga</button>
+      </div>
+    </div>
+    <script src="/startup.js"></script>
     <script type="module" src="/src.tsx"></script>
   </body>
 </html>

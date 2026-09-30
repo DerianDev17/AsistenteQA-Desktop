@@ -20,6 +20,8 @@ npm start
 
 La base se crea y migra automáticamente. La interfaz debe abrirse desde Electron: abrir el HTML o el servidor Vite en un navegador no proporciona acceso a los datos.
 
+Al arrancar se muestra un estado de carga. Si la interfaz no se descarga o tarda más de 15 segundos, aparece **Reintentar carga**; si falla una vista, aparece **Reintentar vista**. Estas acciones conservan los datos locales. La aplicación permite recargar su propia pantalla y sigue bloqueando la navegación externa. Las pruebas E2E comprueban también el servidor de desarrollo, una descarga fallida y su recuperación.
+
 ## Funciones disponibles
 
 - Dashboard con cifras reales, actividades de hoy, proyectos y resumen local.

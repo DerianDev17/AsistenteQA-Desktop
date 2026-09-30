@@ -130,7 +130,10 @@ else {
       });
       Menu.setApplicationMenu(null);
       window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-      window.webContents.on('will-navigate', (event) => event.preventDefault());
+      window.webContents.on('will-navigate', (event) => {
+        // Permit reloading this exact renderer, including Vite's recovery reloads.
+        if (event.url !== trustedUrl) event.preventDefault();
+      });
       window.webContents.on('will-attach-webview', (event) => event.preventDefault());
       window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) =>
         callback(false),
