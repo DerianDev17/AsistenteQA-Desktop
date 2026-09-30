@@ -63,3 +63,8 @@ model MailMessage {
   @@unique([accountId, providerId])
   @@index([accountId, receivedAt, id])
 }
+
+model CalendarCache {
+  accountId String @id
+  content   Bytes
+}

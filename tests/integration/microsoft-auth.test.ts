@@ -32,7 +32,7 @@ vi.mock('@azure/msal-node', async (importOriginal) => {
     },
   };
 });
-import { MicrosoftAuth } from '../../src/infrastructure/email/microsoft-auth';
+import { MicrosoftAuth, calendarScopes } from '../../src/infrastructure/email/microsoft-auth';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -92,6 +92,25 @@ it('no abre URLs ajenas a Microsoft', async () => {
     new MicrosoftAuth(browser).connect(mailConfigData, new AbortController().signal),
   ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   expect(browser).not.toHaveBeenCalled();
+});
+it('solicita calendario solo en la autorización opcional y conserva lectura de correo', async () => {
+  const browser = vi.fn(async (value: string) => {
+    const url = new URL(value);
+    await fetch(
+      `${url.searchParams.get('redirect_uri')}?state=${url.searchParams.get('state')}&code=fake-code`,
+    );
+  });
+  const adapter = new MicrosoftAuth(browser, calendarScopes);
+  await adapter.connect(mailConfigData, new AbortController().signal);
+  expect(mock.url.mock.calls[0][0].scopes).toEqual([
+    'https://graph.microsoft.com/Mail.Read',
+    'https://graph.microsoft.com/Calendars.Read',
+  ]);
+  expect(mock.byCode.mock.calls[0][0].scopes).toEqual(calendarScopes);
+  mock.account.mockResolvedValue({ homeAccountId: 'fake-account' });
+  mock.silent.mockResolvedValue({ accessToken: 'fake-token' });
+  await adapter.token(mailConfigData, mailState.account!, new AbortController().signal);
+  expect(mock.silent.mock.calls[0][0].scopes).toEqual(calendarScopes);
 });
 it('renueva silenciosamente desde caché y requiere login si no encuentra la cuenta', async () => {
   const adapter = new MicrosoftAuth(vi.fn());

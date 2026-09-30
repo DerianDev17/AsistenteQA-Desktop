@@ -5,7 +5,10 @@ import type { MailConfig } from '../../domain/email';
 import { AppError } from '../../domain/validation';
 import { authorizationListener } from './loopback';
 
-const scopes = ['https://graph.microsoft.com/Mail.Read'];
+export const calendarScopes = [
+  'https://graph.microsoft.com/Mail.Read',
+  'https://graph.microsoft.com/Calendars.Read',
+];
 const createClient = (config: MailConfig) =>
   new PublicClientApplication({
     auth: {
@@ -29,7 +32,7 @@ function authError(error: unknown): AppError {
   if (['invalid_client', 'unauthorized_client', 'invalid_resource', 'access_denied'].includes(code))
     return new AppError(
       'AUTH_REQUIRED',
-      'Microsoft rechazó el registro o sus permisos. Revisa el client ID, tenant ID y permiso delegado Mail.Read con TI.',
+      'Microsoft rechazó el registro o sus permisos. Revisa el client ID, tenant ID y los permisos delegados solicitados con TI.',
     );
   return new AppError(
     'NETWORK',
@@ -37,7 +40,10 @@ function authError(error: unknown): AppError {
   );
 }
 export class MicrosoftAuth implements MailAuth {
-  constructor(private openBrowser: (url: string) => Promise<void>) {}
+  constructor(
+    private openBrowser: (url: string) => Promise<void>,
+    private scopes = ['https://graph.microsoft.com/Mail.Read'],
+  ) {}
   async connect(config: MailConfig, signal: AbortSignal) {
     const client = createClient(config);
     const state = randomBytes(32).toString('base64url');
@@ -46,7 +52,7 @@ export class MicrosoftAuth implements MailAuth {
     const listener = await authorizationListener(state, signal);
     try {
       const url = await client.getAuthCodeUrl({
-        scopes,
+        scopes: this.scopes,
         redirectUri: listener.redirectUri,
         codeChallenge: challenge,
         codeChallengeMethod: 'S256',
@@ -64,7 +70,7 @@ export class MicrosoftAuth implements MailAuth {
       await this.openBrowser(url);
       const code = await listener.code;
       const result = await client.acquireTokenByCode({
-        scopes,
+        scopes: this.scopes,
         redirectUri: listener.redirectUri,
         code,
         codeVerifier: verifier,
@@ -91,7 +97,7 @@ export class MicrosoftAuth implements MailAuth {
       const cached = await client.getTokenCache().getAccountByHomeId(account.id);
       if (!cached)
         throw new AppError('AUTH_REQUIRED', 'Vuelve a conectar tu cuenta para renovar la sesión.');
-      const result = await client.acquireTokenSilent({ scopes, account: cached });
+      const result = await client.acquireTokenSilent({ scopes: this.scopes, account: cached });
       if (signal.aborted) throw new AppError('CANCELLED', 'Sincronización cancelada.');
       return { accessToken: result.accessToken, cache: client.getTokenCache().serialize() };
     } catch (error) {

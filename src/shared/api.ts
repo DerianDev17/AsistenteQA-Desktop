@@ -2,11 +2,19 @@ import type { Snapshot } from '../application/workspace';
 import type { Project, ProjectInput, Task, TaskInput, Settings } from '../domain/models';
 import type { MailConfig, MailPage, MailStatus } from '../domain/email';
 import type { EmailTaskDraft } from '../application/email/tasks';
+import type { CalendarSnapshot } from '../domain/calendar';
 
 export type Result<T> =
   { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
 export interface QaApi {
   snapshot(): Promise<Result<Snapshot>>;
+  calendar: {
+    snapshot(): Promise<Result<CalendarSnapshot>>;
+    connect(): Promise<Result<void>>;
+    sync(): Promise<Result<void>>;
+    cancel(): Promise<Result<void>>;
+    openMeeting(id: string): Promise<Result<void>>;
+  };
   projects: {
     create(data: ProjectInput): Promise<Result<Project>>;
     update(id: string, data: ProjectInput): Promise<Result<Project>>;
@@ -33,6 +41,11 @@ export interface QaApi {
 }
 export const channels = {
   snapshot: 'workspace:snapshot',
+  calendarSnapshot: 'calendar:snapshot',
+  calendarConnect: 'calendar:connect',
+  calendarSync: 'calendar:sync',
+  calendarCancel: 'calendar:cancel',
+  calendarOpen: 'calendar:open',
   projectCreate: 'project:create',
   projectUpdate: 'project:update',
   projectDelete: 'project:delete',

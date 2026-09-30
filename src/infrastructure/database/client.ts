@@ -3,12 +3,14 @@ import { createHash, randomUUID } from 'node:crypto';
 import initial from '../../../prisma/migrations/202609290001_initial/migration.sql?raw';
 import mail from '../../../prisma/migrations/202609290002_mail/migration.sql?raw';
 import emailTasks from '../../../prisma/migrations/202609290003_email_tasks/migration.sql?raw';
+import calendar from '../../../prisma/migrations/202609300001_calendar/migration.sql?raw';
 
 // Bundled SQL keeps startup independent of a globally installed Prisma CLI.
 const migrations = [
   { name: '202609290001_initial', sql: initial },
   { name: '202609290002_mail', sql: mail },
   { name: '202609290003_email_tasks', sql: emailTasks },
+  { name: '202609300001_calendar', sql: calendar },
 ];
 export async function openDatabase(path: string) {
   const client = new PrismaClient({

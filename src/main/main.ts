@@ -20,7 +20,11 @@ import { handlers, respond, trustedSender } from './ipc/handlers';
 import { AppError } from '../domain/validation';
 import { MailService } from '../application/email/service';
 import { EncryptedMailVault } from '../infrastructure/security/mail-vault';
-import { MicrosoftAuth } from '../infrastructure/email/microsoft-auth';
+import { MicrosoftAuth, calendarScopes } from '../infrastructure/email/microsoft-auth';
+import { MicrosoftCalendar } from '../infrastructure/calendar/microsoft-calendar';
+import { calendarRepository } from '../infrastructure/database/calendar-repository';
+import { CalendarService } from '../application/calendar/service';
+import { calendarHandlers } from './ipc/calendar.ipc';
 import { MicrosoftGraph } from '../infrastructure/email/microsoft-graph';
 import { mailRepository } from '../infrastructure/database/mail-repository';
 import { systemCipher } from './security/cipher';
@@ -72,11 +76,21 @@ else {
       const db = await openDatabase(join(dataDir, 'workspace.db'));
       const mailVault = new EncryptedMailVault(join(dataDir, 'microsoft365.bin'), systemCipher);
       const messages = mailRepository(db, systemCipher);
+      const calendarCache = calendarRepository(db, systemCipher);
       const mail = new MailService(
         mailVault,
         new MicrosoftAuth((url) => shell.openExternal(url)),
         new MicrosoftGraph(),
         messages,
+        () => new Date(),
+        () => calendarCache.clear(),
+      );
+      const calendar = new CalendarService(
+        mail,
+        mailVault,
+        new MicrosoftAuth((url) => shell.openExternal(url), calendarScopes),
+        new MicrosoftCalendar(),
+        calendarCache,
       );
       disconnect = async () => {
         await mail.stop();
@@ -126,6 +140,11 @@ else {
         ...handlers(workspace),
         ...mailHandlers(mail),
         ...emailTaskHandlers(emailTasks),
+        ...calendarHandlers(
+          calendar,
+          (url) => shell.openExternal(url),
+          () => mail.cancel(),
+        ),
       })) {
         ipcMain.handle(channel, (event, payload: unknown) =>
           respond(
@@ -182,9 +201,18 @@ else {
       await window.loadURL(trustedUrl);
       log('startup', 'OK');
       const syncMail = () =>
-        void mail
-          .syncIfEnabled()
-          .catch((error) => log('mail:sync', error instanceof AppError ? error.code : 'INTERNAL'));
+        void (async () => {
+          await mail
+            .syncIfEnabled()
+            .catch((error) =>
+              log('mail:sync', error instanceof AppError ? error.code : 'INTERNAL'),
+            );
+          await calendar
+            .syncIfEnabled()
+            .catch((error) =>
+              log('calendar:sync', error instanceof AppError ? error.code : 'INTERNAL'),
+            );
+        })();
       syncMail();
       mailTimer = setInterval(syncMail, 5 * 60000);
       let checking = false;

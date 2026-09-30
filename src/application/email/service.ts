@@ -14,6 +14,7 @@ export class MailService {
     private provider: MailProvider,
     private repository: MailRepository,
     private now: () => Date = () => new Date(),
+    private clearRelated: () => Promise<void> = async () => {},
   ) {}
   async status(): Promise<MailStatus> {
     const state = await this.vault.load();
@@ -52,6 +53,9 @@ export class MailService {
     });
   }
   connect() {
+    return this.connectUsing(this.auth);
+  }
+  connectUsing(auth: MailAuth) {
     return this.exclusive('connect', async (signal) => {
       this.vault.assertAvailable();
       const state = await this.vault.load();
@@ -60,14 +64,17 @@ export class MailService {
           'VALIDATION',
           'Guarda primero el client ID y tenant ID de tu institución.',
         );
-      const connected = await this.auth.connect(state.config, signal);
+      const connected = await auth.connect(state.config, signal);
       this.check(signal);
       if (state.account && state.account.id !== connected.id)
         throw new AppError(
           'CONFLICT',
           'Elegiste otra cuenta. Desconecta la cuenta actual antes de cambiar de buzón.',
         );
-      if (!state.account) await this.repository.clear();
+      if (!state.account) {
+        await this.repository.clear();
+        await this.clearRelated();
+      }
       await this.vault.save({
         ...state,
         account: {
@@ -133,6 +140,23 @@ export class MailService {
       const state = await this.vault.load();
       await this.vault.save({ config: state.config, account: null });
       await this.repository.clear();
+      await this.clearRelated();
+    });
+  }
+  // Calendar and mail share one MSAL cache and one operation lock. Tokens never cross IPC.
+  withAccount(
+    auth: MailAuth,
+    run: (accountId: string, token: string, signal: AbortSignal) => Promise<void>,
+  ) {
+    return this.exclusive('sync', async (signal) => {
+      const state = await this.vault.load();
+      if (!state.config || !state.account)
+        throw new AppError('AUTH_REQUIRED', 'Conecta tu cuenta institucional desde Correos.');
+      const credentials = await auth.token(state.config, state.account, signal);
+      this.check(signal);
+      state.account.cache = credentials.cache;
+      await this.vault.save(state);
+      await run(state.account.id, credentials.accessToken, signal);
     });
   }
   cancel() {

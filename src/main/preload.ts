@@ -15,6 +15,13 @@ async function request<T>(channel: string, payload?: unknown): Promise<Result<T>
 }
 const api: QaApi = {
   snapshot: () => request(channels.snapshot),
+  calendar: {
+    snapshot: () => request(channels.calendarSnapshot),
+    connect: () => request(channels.calendarConnect),
+    sync: () => request(channels.calendarSync),
+    cancel: () => request(channels.calendarCancel),
+    openMeeting: (id) => request(channels.calendarOpen, id),
+  },
   projects: {
     create: (data) => request(channels.projectCreate, data),
     update: (id, data) => request(channels.projectUpdate, { id, data }),
